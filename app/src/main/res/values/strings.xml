@@ -4,4 +4,15 @@
     <string name="nav_search">Buscar</string>
     <string name="nav_add_photo">Agregar</string>
     <string name="nav_settings">Configuración</string>
+    <string name="add_photo_button">Agregar Imagen</string>
+    <string name="text_siguiente">Siguiente</string>
+    <string name="folder_name_hint">Nombre de la carpeta</string>
+    <string name="create_folder">Crear carpeta</string>
+    <string name="select_folder">Seleccionar carpeta</string>
+    <string name="folder_created">Carpeta creada</string>
+    <string name="error_creating_folder">Error al crear la carpeta</string>
+    <string name="image_saved">Imagen guardada</string>
+    <string name="error_saving_image">Error al guardar la imagen</string>
+    <string name="folder_name_empty">El nombre de la carpeta no puede estar vacío</string>
+    <string name="image_count">%1$d imágenes</string>
 </resources>
