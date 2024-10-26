@@ -1,17 +1,13 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
+    <!-- Tema de aplicación para modo oscuro -->
     <style name="Theme.Brain2" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
-        <!-- Primary brand color. -->
-        <item name="colorPrimary">@color/black</item>
+        <item name="colorPrimary">@color/black</item> <!-- Barra superior en negro -->
         <item name="colorPrimaryVariant">@color/black</item>
-        <item name="colorOnPrimary">@color/white</item>
-
-        <!-- Secondary brand color. -->
-        <item name="colorSecondary">@color/white</item>
+        <item name="colorOnPrimary">@color/white</item> <!-- Texto de la barra superior en blanco -->
+        <item name="colorSecondary">@color/white</item> <!-- Color secundario -->
         <item name="colorSecondaryVariant">@color/white</item>
-        <item name="colorOnSecondary">@color/black</item>
-
-        <!-- Status bar color. -->
-        <item name="android:statusBarColor">@color/black</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <item name="android:statusBarColor">@color/black</item> <!-- Color de la barra de estado -->
+        <item name="android:windowBackground">@color/appBackground</item> <!-- Fondo de la ventana en negro -->
     </style>
 </resources>

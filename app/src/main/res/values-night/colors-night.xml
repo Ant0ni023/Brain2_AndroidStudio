@@ -1,9 +1,7 @@
 <resources>
+    <color name="appBackground">#000000</color> <!-- Fondo negro para modo oscuro -->
     <color name="black">#000000</color>
     <color name="white">#FFFFFF</color>
-    <color name="appBackground">#000000</color> <!-- Fondo negro para modo oscuro -->
-    <color name="iconColor">#FFFFFF</color> <!-- Color blanco para íconos en modo oscuro -->
-    <color name="textColor">#FFFFFF</color> <!-- Color blanco para texto en modo oscuro -->
-    <color name="navigation_icon_color">#FFFFFF</color> <!-- Color de íconos de la barra de navegación en modo oscuro -->
-    <color name="navigation_text_color">#FFFFFF</color> <!-- Color del texto en la barra de navegación en modo oscuro -->
+    <color name="navigation_icon_color">#FFFFFF</color> <!-- Iconos en blanco para modo oscuro -->
+    <color name="navigation_text_color">#FFFFFF</color> <!-- Texto en blanco para modo oscuro -->
 </resources>
