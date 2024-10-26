@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Brain2</string> <!-- Título de la aplicación -->
+    <string name="nav_home">Inicio</string> <!-- Texto para el ítem de Inicio -->
+    <string name="nav_search">Buscar</string> <!-- Texto para el ítem de Buscar -->
+    <string name="nav_add_photo">Agregar</string> <!-- Texto para el ítem de Agregar Foto -->
+    <string name="nav_settings">Configuración</string> <!-- Texto para el ítem de Configuración -->
+</resources>
