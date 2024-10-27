@@ -1,9 +1,10 @@
 package com.dev.brain2;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Folder {
+public class Folder implements Serializable {  // Implementa Serializable
 
     private String name;
     private String color;

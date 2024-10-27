@@ -40,4 +40,7 @@ dependencies {
 
     // Agregamos la dependencia de Gson
     implementation libs.gson
+
+    // Agregamos la dependencia de RecyclerView
+    implementation 'androidx.recyclerview:recyclerview:1.2.1'
 }

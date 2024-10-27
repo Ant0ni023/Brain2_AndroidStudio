@@ -4,8 +4,12 @@
 
     <!-- Permisos necesarios -->
     <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" tools:ignore="ScopedStorage" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" tools:ignore="ScopedStorage" />
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" tools:ignore="ScopedStorage" />
+
+    <!-- Declaración de feature de cámara para no requerir hardware específico -->
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
 
     <application
         android:allowBackup="true"
@@ -16,10 +20,11 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Brain2"
+        android:largeHeap="true"
         tools:targetApi="31">
 
-        <activity
-            android:name=".MainActivity"
+        <!-- Actividades declaradas -->
+        <activity android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -27,8 +32,8 @@
             </intent-filter>
         </activity>
 
+        <activity android:name=".FolderContentActivity" />
         <activity android:name=".ImagePickerActivity" />
 
     </application>
-
 </manifest>

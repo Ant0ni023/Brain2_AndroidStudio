@@ -1,19 +1,24 @@
 package com.dev.brain2;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.view.View;
 import android.view.WindowInsets;
 import android.widget.Toast;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.view.ViewCompat;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import android.graphics.Insets;
 
 public class MainActivity extends AppCompatActivity implements FolderAdapter.OnFolderClickListener {
+
+    private static final int REQUEST_CODE_MEDIA_PERMISSION = 101;
 
     private FolderManager folderManager;
     private FolderAdapter folderAdapter;
@@ -27,7 +32,33 @@ public class MainActivity extends AppCompatActivity implements FolderAdapter.OnF
 
         folderManager = new FolderManager(this);
         setupRecyclerView();
+        setupBottomNavigationView();
 
+        // Solicita permisos de almacenamiento dependiendo de la versión de Android
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requestMediaPermissions();
+        } else {
+            requestLegacyStoragePermission();
+        }
+
+        // Ajuste de padding para Android API 30 o superior
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            findViewById(R.id.main).setOnApplyWindowInsetsListener((v, insets) -> {
+                Insets systemBarsInsets = insets.getInsets(WindowInsets.Type.systemBars());
+                v.setPadding(systemBarsInsets.left, systemBarsInsets.top, systemBarsInsets.right, systemBarsInsets.bottom);
+                return WindowInsets.CONSUMED;
+            });
+        }
+    }
+
+    private void setupRecyclerView() {
+        recyclerView = findViewById(R.id.foldersRecyclerView);
+        folderAdapter = new FolderAdapter(this, this);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setAdapter(folderAdapter);
+    }
+
+    private void setupBottomNavigationView() {
         bottomNavigationView = findViewById(R.id.bottom_navigation);
         bottomNavigationView.setSelectedItemId(R.id.nav_home);
         bottomNavigationView.setOnItemSelectedListener(item -> {
@@ -47,22 +78,28 @@ public class MainActivity extends AppCompatActivity implements FolderAdapter.OnF
             }
             return false;
         });
+    }
 
-        // Uso de WindowInsets para ajustar el padding en Android API 30 o superior
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            findViewById(R.id.main).setOnApplyWindowInsetsListener((v, insets) -> {
-                Insets systemBarsInsets = insets.getInsets(WindowInsets.Type.systemBars());
-                v.setPadding(systemBarsInsets.left, systemBarsInsets.top, systemBarsInsets.right, systemBarsInsets.bottom);
-                return WindowInsets.CONSUMED;
-            });
+    private void requestLegacyStoragePermission() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, REQUEST_CODE_MEDIA_PERMISSION);
         }
     }
 
-    private void setupRecyclerView() {
-        recyclerView = findViewById(R.id.foldersRecyclerView);
-        folderAdapter = new FolderAdapter(this, this); // Asegúrate de pasar el contexto y el listener
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recyclerView.setAdapter(folderAdapter);
+    private void requestMediaPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{
+                                Manifest.permission.READ_MEDIA_IMAGES,
+                                Manifest.permission.READ_MEDIA_VIDEO,
+                                Manifest.permission.READ_MEDIA_AUDIO
+                        },
+                        REQUEST_CODE_MEDIA_PERMISSION);
+            }
+        }
     }
 
     private void loadFolders() {
@@ -79,21 +116,40 @@ public class MainActivity extends AppCompatActivity implements FolderAdapter.OnF
 
     @Override
     public void onFolderClick(Folder folder) {
-        Toast.makeText(this, "Carpeta seleccionada: " + folder.getName(), Toast.LENGTH_SHORT).show();
+        Intent intent = new Intent(this, FolderContentActivity.class);
+        intent.putExtra("folder", folder);
+        startActivity(intent);
     }
 
     @Override
     public void onFolderEdit(Folder folder, int position) {
-        // Implementa la lógica para editar la carpeta aquí
-        folderManager.updateFolder(folder); // Asumiendo que tienes este método en FolderManager
-        folderAdapter.notifyItemChanged(position); // Actualizar el adaptador
+        folderManager.updateFolder(folder);
+        folderAdapter.notifyItemChanged(position);
         Toast.makeText(this, "Carpeta actualizada: " + folder.getName(), Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void onFolderDelete(Folder folder) {
-        folderManager.deleteFolder(folder); // Asumiendo que tienes este método en FolderManager
-        loadFolders(); // Recargar la lista de carpetas
+        folderManager.deleteFolder(folder);
+        loadFolders();
         Toast.makeText(this, "Carpeta eliminada: " + folder.getName(), Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_CODE_MEDIA_PERMISSION) {
+            boolean allGranted = true;
+            for (int result : grantResults) {
+                if (result != PackageManager.PERMISSION_GRANTED) {
+                    allGranted = false;
+                    break;
+                }
+            }
+
+            if (!allGranted) {
+                Toast.makeText(this, "Se necesitan permisos para acceder a los archivos multimedia", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 }

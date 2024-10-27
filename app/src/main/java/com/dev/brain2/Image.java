@@ -1,6 +1,8 @@
 package com.dev.brain2;
 
-public class Image {
+import java.io.Serializable;
+
+public class Image implements Serializable {  // Implementa Serializable
 
     private String uri;
 
