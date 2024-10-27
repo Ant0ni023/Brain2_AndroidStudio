@@ -34,6 +34,7 @@
 
         <activity android:name=".FolderContentActivity" />
         <activity android:name=".ImagePickerActivity" />
+        <activity android:name=".ImageViewerActivity" />
 
     </application>
 </manifest>

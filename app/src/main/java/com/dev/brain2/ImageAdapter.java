@@ -1,6 +1,7 @@
 package com.dev.brain2;
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -32,6 +33,13 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
         Image image = images.get(position);
         Uri imageUri = Uri.parse(image.getUri());
         holder.imageView.setImageURI(imageUri);
+
+        // Agregar OnClickListener para abrir la imagen en tamaño completo
+        holder.imageView.setOnClickListener(v -> {
+            Intent intent = new Intent(context, ImageViewerActivity.class);
+            intent.putExtra("imageUri", image.getUri()); // Pasar la URI de la imagen como String
+            context.startActivity(intent);
+        });
     }
 
     @Override
