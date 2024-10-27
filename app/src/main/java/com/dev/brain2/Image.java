@@ -2,12 +2,12 @@ package com.dev.brain2;
 
 import java.io.Serializable;
 
-public class Image implements Serializable {  // Implementa Serializable
+public class Image implements Serializable {
 
     private String uri;
-    private String name; // Nueva propiedad para almacenar el nombre de la imagen
+    private String name;
 
-    public Image(String uri) {
+    public Image(String uri, String name) {
         this.uri = uri;
         this.name = name;
     }

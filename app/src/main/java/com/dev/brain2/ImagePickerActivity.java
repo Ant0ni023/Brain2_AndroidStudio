@@ -8,6 +8,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
@@ -77,7 +78,7 @@ public class ImagePickerActivity extends AppCompatActivity {
 
         confirmButton.setOnClickListener(v -> {
             if (selectedImageUri != null) {
-                openFolderSelectionDialog(selectedImageUri);
+                askForImageNameAndSave(selectedImageUri); // Llama al método para obtener el nombre y luego abrir la selección de carpeta
             } else {
                 Toast.makeText(this, "Por favor, seleccione una imagen primero", Toast.LENGTH_SHORT).show();
             }
@@ -128,11 +129,33 @@ public class ImagePickerActivity extends AppCompatActivity {
         }
     }
 
-    private void openFolderSelectionDialog(Uri imageUri) {
+    private void askForImageNameAndSave(Uri imageUri) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Ingrese el nombre de la imagen");
+
+        final EditText input = new EditText(this);
+        input.setHint("Nombre de la imagen");
+        builder.setView(input);
+
+        builder.setPositiveButton("Guardar", (dialog, which) -> {
+            String imageName = input.getText().toString();
+            if (!imageName.isEmpty()) {
+                openFolderSelectionDialog(imageUri, imageName); // Pasa el URI y el nombre al diálogo de selección de carpeta
+            } else {
+                Toast.makeText(this, "El nombre no puede estar vacío", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        builder.setNegativeButton("Cancelar", (dialog, which) -> dialog.cancel());
+
+        builder.show();
+    }
+
+    private void openFolderSelectionDialog(Uri imageUri, String imageName) {
         FolderSelectionDialog dialog = new FolderSelectionDialog(this, folderManager, folder -> {
             try {
                 File imageFile = FileUtils.saveImageToFolder(this, imageUri, folder.getName());
-                folder.addImage(new Image(imageFile.getAbsolutePath()));
+                folder.addImage(new Image(imageFile.getAbsolutePath(), imageName)); // Asigna el nombre a la imagen
                 folderManager.updateFolder(folder);
                 Toast.makeText(this, "Imagen guardada en " + folder.getName(), Toast.LENGTH_SHORT).show();
                 finish();

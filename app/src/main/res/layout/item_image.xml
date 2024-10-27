@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
@@ -8,6 +7,18 @@
         android:id="@+id/imageView"
         android:layout_width="100dp"
         android:layout_height="100dp"
-        android:scaleType="centerCrop" />
+        android:scaleType="centerCrop"
+        android:contentDescription="Imagen de la galería" />
 
+    <!-- TextView para el nombre de la imagen -->
+    <TextView
+        android:id="@+id/imageName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:gravity="center"
+        android:textColor="#000000"
+        android:textSize="14sp"
+        android:maxLines="1"
+        android:paddingTop="4dp" />
 </FrameLayout>

@@ -2,7 +2,6 @@ package com.dev.brain2;
 
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.view.LayoutInflater;
@@ -10,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -41,15 +41,14 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
         Image image = images.get(position);
         Uri imageUri = Uri.parse(image.getUri());
         holder.imageView.setImageURI(imageUri);
+        holder.imageName.setText(image.getName()); // Asigna el nombre de la imagen
 
-        // Abrir imagen en tamaño completo al tocar
         holder.imageView.setOnClickListener(v -> {
             Intent intent = new Intent(context, ImageViewerActivity.class);
-            intent.putExtra("imageUri", image.getUri()); // Pasar la URI de la imagen como String
+            intent.putExtra("imageUri", image.getUri());
             context.startActivity(intent);
         });
 
-        // Mostrar opciones al mantener presionado
         holder.imageView.setOnLongClickListener(v -> {
             showOptionsDialog(image, position);
             return true;
@@ -143,10 +142,12 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
 
     static class ImageViewHolder extends RecyclerView.ViewHolder {
         ImageView imageView;
+        TextView imageName; // Nuevo TextView para el nombre
 
         public ImageViewHolder(@NonNull View itemView) {
             super(itemView);
             imageView = itemView.findViewById(R.id.imageView);
+            imageName = itemView.findViewById(R.id.imageName); // Asigna el TextView para el nombre
         }
     }
 }
