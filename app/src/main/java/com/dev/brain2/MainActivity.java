@@ -130,8 +130,8 @@ public class MainActivity extends AppCompatActivity implements FolderAdapter.OnF
 
     @Override
     public void onFolderDelete(Folder folder) {
-        folderManager.deleteFolder(folder);
-        loadFolders();
+        folderManager.deleteFolder(folder); // Llama a deleteFolder en FolderManager
+        loadFolders(); // Recarga las carpetas en la interfaz después de eliminar
         Toast.makeText(this, "Carpeta eliminada: " + folder.getName(), Toast.LENGTH_SHORT).show();
     }
 

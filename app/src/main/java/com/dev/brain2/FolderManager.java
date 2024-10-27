@@ -67,10 +67,24 @@ public class FolderManager {
         return folderNames;
     }
 
-    // Método para eliminar una carpeta específica
-    public void deleteFolder(Folder folderToDelete) {
+    // Método para eliminar una carpeta sin importar si está vacía
+    public void deleteFolder(Folder folder) {
         List<Folder> folders = getFolders();
-        folders.removeIf(folder -> folder.getName().equals(folderToDelete.getName()));
+        folders.removeIf(f -> f.getName().equals(folder.getName()));
         saveFolders(folders);
+    }
+
+    // Método para eliminar una carpeta si está vacía
+    public void deleteFolderIfEmpty(Folder folder) {
+        if (folder.getImages().isEmpty()) {
+            deleteFolder(folder);
+        }
+    }
+
+    // Método para obtener carpetas disponibles para mover imágenes (excluyendo la carpeta actual)
+    public List<Folder> getAvailableFolders(Folder excludeFolder) {
+        List<Folder> folders = getFolders();
+        folders.removeIf(folder -> folder.getName().equals(excludeFolder.getName())); // Excluye la carpeta actual
+        return folders;
     }
 }

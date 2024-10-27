@@ -14,11 +14,15 @@ public class FolderContentActivity extends AppCompatActivity {
     private Folder folder;
     private RecyclerView imagesRecyclerView;
     private ImageAdapter imageAdapter;
+    private FolderManager folderManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_folder_content);
+
+        // Inicializa FolderManager
+        folderManager = new FolderManager(this);
 
         // Obtiene la carpeta seleccionada desde el Intent
         Intent intent = getIntent();
@@ -41,7 +45,7 @@ public class FolderContentActivity extends AppCompatActivity {
         imagesRecyclerView.setLayoutManager(new GridLayoutManager(this, 3)); // 3 columnas de imágenes
 
         List<Image> images = folder.getImages();
-        imageAdapter = new ImageAdapter(this, images);
+        imageAdapter = new ImageAdapter(this, images, folderManager, folder);
         imagesRecyclerView.setAdapter(imageAdapter);
     }
 }
