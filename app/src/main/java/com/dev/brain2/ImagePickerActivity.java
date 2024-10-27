@@ -7,16 +7,14 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
-
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
-
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-
-import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import java.io.File;
@@ -26,18 +24,52 @@ import java.io.IOException;
 public class ImagePickerActivity extends AppCompatActivity {
 
     private ImageView imageView;
-    private static final int PICK_IMAGE = 1;
-    private static final int TAKE_PHOTO = 2;
-    private static final int REQUEST_CAMERA_PERMISSION = 100;
     private Uri selectedImageUri;
     private FolderManager folderManager;
+
+    private final ActivityResultLauncher<Intent> pickImageLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                    selectedImageUri = result.getData().getData();
+                    imageView.setImageURI(selectedImageUri);
+                } else {
+                    finish();
+                }
+            }
+    );
+
+    private final ActivityResultLauncher<Intent> takePhotoLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                    Bitmap bitmap = (Bitmap) result.getData().getExtras().get("data");
+                    selectedImageUri = saveBitmapToUri(bitmap);
+                    imageView.setImageURI(selectedImageUri);
+                } else {
+                    finish();
+                }
+            }
+    );
+
+    private final ActivityResultLauncher<String> requestPermissionLauncher = registerForActivityResult(
+            new ActivityResultContracts.RequestPermission(),
+            isGranted -> {
+                if (isGranted) {
+                    takePhoto();
+                } else {
+                    Toast.makeText(this, "Permiso de cámara denegado", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+            }
+    );
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_image_picker);
-        folderManager = new FolderManager(this);
 
+        folderManager = new FolderManager(this);
         imageView = findViewById(R.id.imageView);
         Button confirmButton = findViewById(R.id.confirmButton);
 
@@ -59,7 +91,7 @@ public class ImagePickerActivity extends AppCompatActivity {
                 .setItems(options, (dialog, which) -> {
                     if (which == 0) {
                         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, REQUEST_CAMERA_PERMISSION);
+                            requestPermissionLauncher.launch(Manifest.permission.CAMERA);
                         } else {
                             takePhoto();
                         }
@@ -67,55 +99,19 @@ public class ImagePickerActivity extends AppCompatActivity {
                         pickImageFromGallery();
                     }
                 })
-                .setNegativeButton("Cancelar", (dialog, which) -> finish())
+                .setNegativeButton("Cancelar", null)
                 .show();
     }
 
     private void takePhoto() {
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        startActivityForResult(intent, TAKE_PHOTO);
+        takePhotoLauncher.launch(intent);
     }
 
     private void pickImageFromGallery() {
         Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         intent.setType("image/*");
-        startActivityForResult(intent, PICK_IMAGE);
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        // Llamar al método super para mantener la cadena de responsabilidad
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-        if (requestCode == REQUEST_CAMERA_PERMISSION) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                takePhoto();
-            } else {
-                Toast.makeText(this, "Permiso de cámara denegado", Toast.LENGTH_SHORT).show();
-                finish();
-            }
-        }
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (resultCode == RESULT_OK && data != null) {
-            if (requestCode == PICK_IMAGE) {
-                selectedImageUri = data.getData();
-                imageView.setImageURI(selectedImageUri);
-            } else if (requestCode == TAKE_PHOTO) {
-                Bundle extras = data.getExtras();
-                if (extras != null) {
-                    Bitmap bitmap = (Bitmap) extras.get("data");
-                    selectedImageUri = saveBitmapToUri(bitmap);
-                    imageView.setImageURI(selectedImageUri);
-                }
-            }
-        } else {
-            finish();
-        }
+        pickImageLauncher.launch(intent);
     }
 
     private Uri saveBitmapToUri(Bitmap bitmap) {

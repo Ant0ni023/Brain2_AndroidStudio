@@ -1,24 +1,24 @@
 package com.dev.brain2;
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
+import android.view.View;
+import android.view.WindowInsets;
 import android.widget.Toast;
-
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import android.graphics.Insets;
 
 public class MainActivity extends AppCompatActivity implements FolderAdapter.OnFolderClickListener {
+
     private FolderManager folderManager;
     private FolderAdapter folderAdapter;
     private RecyclerView recyclerView;
     private BottomNavigationView bottomNavigationView;
-    private static final int REQUEST_IMAGE_PICK = 1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,7 +26,6 @@ public class MainActivity extends AppCompatActivity implements FolderAdapter.OnF
         setContentView(R.layout.activity_main);
 
         folderManager = new FolderManager(this);
-
         setupRecyclerView();
 
         bottomNavigationView = findViewById(R.id.bottom_navigation);
@@ -34,37 +33,35 @@ public class MainActivity extends AppCompatActivity implements FolderAdapter.OnF
         bottomNavigationView.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
             if (itemId == R.id.nav_home) {
-                // Ya estamos en inicio
                 return true;
             } else if (itemId == R.id.nav_search) {
-                // Acción de buscar
                 Toast.makeText(this, "Buscar", Toast.LENGTH_SHORT).show();
                 return true;
             } else if (itemId == R.id.nav_add_photo) {
-                // Iniciar ImagePickerActivity
                 Intent intent = new Intent(this, ImagePickerActivity.class);
                 startActivity(intent);
                 return true;
             } else if (itemId == R.id.nav_settings) {
-                // Acción de configuración
                 Toast.makeText(this, "Configuración", Toast.LENGTH_SHORT).show();
                 return true;
             }
             return false;
         });
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
+        // Uso de WindowInsets para ajustar el padding en Android API 30 o superior
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            findViewById(R.id.main).setOnApplyWindowInsetsListener((v, insets) -> {
+                Insets systemBarsInsets = insets.getInsets(WindowInsets.Type.systemBars());
+                v.setPadding(systemBarsInsets.left, systemBarsInsets.top, systemBarsInsets.right, systemBarsInsets.bottom);
+                return WindowInsets.CONSUMED;
+            });
+        }
     }
 
     private void setupRecyclerView() {
         recyclerView = findViewById(R.id.foldersRecyclerView);
-        folderAdapter = new FolderAdapter(this);
-        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
-        recyclerView.setLayoutManager(layoutManager);
+        folderAdapter = new FolderAdapter(this, this); // Asegúrate de pasar el contexto y el listener
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(folderAdapter);
     }
 
@@ -83,5 +80,20 @@ public class MainActivity extends AppCompatActivity implements FolderAdapter.OnF
     @Override
     public void onFolderClick(Folder folder) {
         Toast.makeText(this, "Carpeta seleccionada: " + folder.getName(), Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onFolderEdit(Folder folder, int position) {
+        // Implementa la lógica para editar la carpeta aquí
+        folderManager.updateFolder(folder); // Asumiendo que tienes este método en FolderManager
+        folderAdapter.notifyItemChanged(position); // Actualizar el adaptador
+        Toast.makeText(this, "Carpeta actualizada: " + folder.getName(), Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onFolderDelete(Folder folder) {
+        folderManager.deleteFolder(folder); // Asumiendo que tienes este método en FolderManager
+        loadFolders(); // Recargar la lista de carpetas
+        Toast.makeText(this, "Carpeta eliminada: " + folder.getName(), Toast.LENGTH_SHORT).show();
     }
 }

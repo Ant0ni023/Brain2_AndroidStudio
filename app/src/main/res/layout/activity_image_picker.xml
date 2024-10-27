@@ -11,7 +11,7 @@
         android:id="@+id/confirmButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/text_siguiente"
+        android:text="Siguiente"
         android:textColor="@color/imagePickerButtonColor"
         style="@style/Widget.MaterialComponents.Button.TextButton"
         app:layout_constraintTop_toTopOf="parent"
@@ -22,7 +22,7 @@
         android:id="@+id/imageView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:contentDescription="@string/add_photo_button"
+        android:contentDescription="Agregar Imagen"
         app:layout_constraintTop_toBottomOf="@id/confirmButton"
         app:layout_constraintBottom_toBottomOf="parent"/>
 

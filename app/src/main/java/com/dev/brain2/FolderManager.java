@@ -2,15 +2,14 @@ package com.dev.brain2;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
 public class FolderManager {
+
     private static final String PREFS_NAME = "Brain2Prefs";
     private static final String FOLDERS_KEY = "folders";
     private SharedPreferences sharedPreferences;
@@ -34,6 +33,11 @@ public class FolderManager {
         return gson.fromJson(foldersJson, folderListType);
     }
 
+    private void saveFolders(List<Folder> folders) {
+        String foldersJson = gson.toJson(folders);
+        sharedPreferences.edit().putString(FOLDERS_KEY, foldersJson).apply();
+    }
+
     public void updateFolder(Folder updatedFolder) {
         List<Folder> folders = getFolders();
         for (int i = 0; i < folders.size(); i++) {
@@ -43,13 +47,6 @@ public class FolderManager {
             }
         }
         saveFolders(folders);
-    }
-
-    private void saveFolders(List<Folder> folders) {
-        String foldersJson = gson.toJson(folders);
-        sharedPreferences.edit()
-                .putString(FOLDERS_KEY, foldersJson)
-                .apply();
     }
 
     public Folder getFolderByName(String folderName) {
@@ -68,5 +65,12 @@ public class FolderManager {
             folderNames.add(folder.getName());
         }
         return folderNames;
+    }
+
+    // Método para eliminar una carpeta específica
+    public void deleteFolder(Folder folderToDelete) {
+        List<Folder> folders = getFolders();
+        folders.removeIf(folder -> folder.getName().equals(folderToDelete.getName()));
+        saveFolders(folders);
     }
 }

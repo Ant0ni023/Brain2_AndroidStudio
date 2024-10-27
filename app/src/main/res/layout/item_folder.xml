@@ -43,5 +43,6 @@
                 android:textSize="14sp"
                 android:textColor="@color/folder_count_text"/>
         </LinearLayout>
+
     </LinearLayout>
 </androidx.cardview.widget.CardView>

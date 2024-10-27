@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Folder {
+
     private String name;
     private String color;
     private List<Image> images;
@@ -14,14 +15,20 @@ public class Folder {
         this.images = new ArrayList<>();
     }
 
-    // Getters y setters
-
     public String getName() {
         return name;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public String getColor() {
         return color;
+    }
+
+    public void setColor(String color) {
+        this.color = color;
     }
 
     public List<Image> getImages() {
@@ -34,5 +41,9 @@ public class Folder {
 
     public int getImageCount() {
         return images.size();
+    }
+
+    public boolean removeImage(Image image) {
+        return images.remove(image);
     }
 }
