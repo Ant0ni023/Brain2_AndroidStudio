@@ -116,6 +116,11 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
         }
     }
 
+    public void removeImage(int index) {
+        deleteImage(index); // Llama al método privado para eliminar la imagen
+    }
+
+
     private void renameImage(Image image, int position) {
         AlertDialog.Builder renameDialog = new AlertDialog.Builder(context);
         renameDialog.setTitle("Cambiar nombre de imagen");
