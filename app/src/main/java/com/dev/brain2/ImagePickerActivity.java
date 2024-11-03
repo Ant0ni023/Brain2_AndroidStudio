@@ -25,10 +25,10 @@ import java.io.IOException;
 public class ImagePickerActivity extends AppCompatActivity {
 
     private ImageView imageView;
-    private Uri selectedImageUri;
+    protected Uri selectedImageUri;
     private FolderManager folderManager;
 
-    private final ActivityResultLauncher<Intent> pickImageLauncher = registerForActivityResult(
+    protected ActivityResultLauncher<Intent> pickImageLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
                 if (result.getResultCode() == RESULT_OK && result.getData() != null) {
@@ -40,7 +40,7 @@ public class ImagePickerActivity extends AppCompatActivity {
             }
     );
 
-    private final ActivityResultLauncher<Intent> takePhotoLauncher = registerForActivityResult(
+    protected ActivityResultLauncher<Intent> takePhotoLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
                 if (result.getResultCode() == RESULT_OK && result.getData() != null) {
@@ -53,7 +53,7 @@ public class ImagePickerActivity extends AppCompatActivity {
             }
     );
 
-    private final ActivityResultLauncher<String> requestPermissionLauncher = registerForActivityResult(
+    protected final ActivityResultLauncher<String> requestPermissionLauncher = registerForActivityResult(
             new ActivityResultContracts.RequestPermission(),
             isGranted -> {
                 if (isGranted) {
@@ -85,7 +85,7 @@ public class ImagePickerActivity extends AppCompatActivity {
         });
     }
 
-    private void selectImage() {
+    protected void selectImage() {
         String[] options = {"Tomar foto", "Seleccionar desde galería"};
         new AlertDialog.Builder(this)
                 .setTitle("Seleccionar imagen")
@@ -104,18 +104,18 @@ public class ImagePickerActivity extends AppCompatActivity {
                 .show();
     }
 
-    private void takePhoto() {
+    protected void takePhoto() {
         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
         takePhotoLauncher.launch(intent);
     }
 
-    private void pickImageFromGallery() {
+    protected void pickImageFromGallery() {
         Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         intent.setType("image/*");
         pickImageLauncher.launch(intent);
     }
 
-    private Uri saveBitmapToUri(Bitmap bitmap) {
+    protected Uri saveBitmapToUri(Bitmap bitmap) {
         try {
             File imageFile = new File(getCacheDir(), "captured_image_" + System.currentTimeMillis() + ".jpg");
             FileOutputStream outputStream = new FileOutputStream(imageFile);
@@ -129,7 +129,7 @@ public class ImagePickerActivity extends AppCompatActivity {
         }
     }
 
-    private void askForImageNameAndSave(Uri imageUri) {
+    protected void askForImageNameAndSave(Uri imageUri) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Ingrese el nombre de la imagen");
 
@@ -151,7 +151,7 @@ public class ImagePickerActivity extends AppCompatActivity {
         builder.show();
     }
 
-    private void openFolderSelectionDialog(Uri imageUri, String imageName) {
+    protected void openFolderSelectionDialog(Uri imageUri, String imageName) {
         FolderSelectionDialog dialog = new FolderSelectionDialog(this, folderManager, folder -> {
             try {
                 File imageFile = FileUtils.saveImageToFolder(this, imageUri, folder.getName());
@@ -166,4 +166,8 @@ public class ImagePickerActivity extends AppCompatActivity {
         });
         dialog.show();
     }
+    public void setSelectedImageUri(Uri uri) {
+        this.selectedImageUri = uri;
+    }
+
 }
