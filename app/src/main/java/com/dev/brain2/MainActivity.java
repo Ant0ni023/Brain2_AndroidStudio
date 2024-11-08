@@ -1,104 +1,101 @@
 package com.dev.brain2;
 
-import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.view.WindowInsets;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
-import android.graphics.Insets;
 
+/**
+ * Actividad principal que muestra la lista de carpetas y gestiona la navegación principal.
+ *
+ * Responsabilidad única: Gestionar la vista principal y la navegación entre funcionalidades.
+ */
 public class MainActivity extends AppCompatActivity implements FolderAdapter.OnFolderClickListener {
 
     private static final int REQUEST_CODE_MEDIA_PERMISSION = 101;
 
-    private FolderManager folderManager;
-    private FolderAdapter folderAdapter;
+    // Vistas
     private RecyclerView recyclerView;
     private BottomNavigationView bottomNavigationView;
+
+    // Gestores
+    private FolderManager folderManager;
+    private FolderAdapter folderAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        folderManager = new FolderManager(this);
+        initializeManagers();
+        initializeViews();
         setupRecyclerView();
         setupBottomNavigationView();
+        checkPermissions();
+    }
 
-        // Solicita permisos de almacenamiento dependiendo de la versión de Android
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            requestMediaPermissions();
-        } else {
-            requestLegacyStoragePermission();
-        }
+    private void initializeManagers() {
+        folderManager = new FolderManager(this);
+    }
 
-        // Ajuste de padding para Android API 30 o superior
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            findViewById(R.id.main).setOnApplyWindowInsetsListener((v, insets) -> {
-                Insets systemBarsInsets = insets.getInsets(WindowInsets.Type.systemBars());
-                v.setPadding(systemBarsInsets.left, systemBarsInsets.top, systemBarsInsets.right, systemBarsInsets.bottom);
-                return WindowInsets.CONSUMED;
-            });
-        }
+    private void initializeViews() {
+        recyclerView = findViewById(R.id.foldersRecyclerView);
+        bottomNavigationView = findViewById(R.id.bottom_navigation);
     }
 
     private void setupRecyclerView() {
-        recyclerView = findViewById(R.id.foldersRecyclerView);
-        folderAdapter = new FolderAdapter(this, this);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        folderAdapter = new FolderAdapter(this, this);
         recyclerView.setAdapter(folderAdapter);
     }
 
     private void setupBottomNavigationView() {
-        bottomNavigationView = findViewById(R.id.bottom_navigation);
         bottomNavigationView.setSelectedItemId(R.id.nav_home);
         bottomNavigationView.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
             if (itemId == R.id.nav_home) {
                 return true;
             } else if (itemId == R.id.nav_search) {
-                Toast.makeText(this, "Buscar", Toast.LENGTH_SHORT).show();
+                showToast("Búsqueda próximamente disponible");
                 return true;
             } else if (itemId == R.id.nav_add_photo) {
-                Intent intent = new Intent(this, ImagePickerActivity.class);
-                startActivity(intent);
+                startActivity(new Intent(this, ImagePickerActivity.class));
                 return true;
             } else if (itemId == R.id.nav_settings) {
-                Toast.makeText(this, "Configuración", Toast.LENGTH_SHORT).show();
+                showToast("Configuración próximamente disponible");
                 return true;
             }
             return false;
         });
     }
 
-    private void requestLegacyStoragePermission() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, REQUEST_CODE_MEDIA_PERMISSION);
+    private void checkPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requestMediaPermissions();
+        } else {
+            requestLegacyStoragePermission();
         }
+    }
+
+    private void requestLegacyStoragePermission() {
+        String[] permissions = {android.Manifest.permission.READ_EXTERNAL_STORAGE};
+        requestPermissions(permissions, REQUEST_CODE_MEDIA_PERMISSION);
     }
 
     private void requestMediaPermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this,
-                        new String[]{
-                                Manifest.permission.READ_MEDIA_IMAGES,
-                                Manifest.permission.READ_MEDIA_VIDEO,
-                                Manifest.permission.READ_MEDIA_AUDIO
-                        },
-                        REQUEST_CODE_MEDIA_PERMISSION);
-            }
+            String[] permissions = {
+                    android.Manifest.permission.READ_MEDIA_IMAGES,
+                    android.Manifest.permission.READ_MEDIA_VIDEO,
+                    android.Manifest.permission.READ_MEDIA_AUDIO
+            };
+            requestPermissions(permissions, REQUEST_CODE_MEDIA_PERMISSION);
         }
     }
 
@@ -125,18 +122,19 @@ public class MainActivity extends AppCompatActivity implements FolderAdapter.OnF
     public void onFolderEdit(Folder folder, int position) {
         folderManager.updateFolder(folder);
         folderAdapter.notifyItemChanged(position);
-        Toast.makeText(this, "Carpeta actualizada: " + folder.getName(), Toast.LENGTH_SHORT).show();
+        showToast("Carpeta actualizada: " + folder.getName());
     }
 
     @Override
     public void onFolderDelete(Folder folder) {
-        folderManager.deleteFolder(folder); // Llama a deleteFolder en FolderManager
-        loadFolders(); // Recarga las carpetas en la interfaz después de eliminar
-        Toast.makeText(this, "Carpeta eliminada: " + folder.getName(), Toast.LENGTH_SHORT).show();
+        folderManager.deleteFolder(folder);
+        loadFolders();
+        showToast("Carpeta eliminada: " + folder.getName());
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == REQUEST_CODE_MEDIA_PERMISSION) {
             boolean allGranted = true;
@@ -148,8 +146,12 @@ public class MainActivity extends AppCompatActivity implements FolderAdapter.OnF
             }
 
             if (!allGranted) {
-                Toast.makeText(this, "Se necesitan permisos para acceder a los archivos multimedia", Toast.LENGTH_SHORT).show();
+                showToast("Se requieren permisos para acceder a los archivos multimedia");
             }
         }
+    }
+
+    private void showToast(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 }

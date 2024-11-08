@@ -2,7 +2,6 @@ package com.dev.brain2;
 
 import android.Manifest;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
@@ -10,164 +9,266 @@ import android.provider.MediaStore;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.Toast;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import android.widget.Toast;
+import android.content.pm.PackageManager;
+import android.view.View;
+import android.view.LayoutInflater;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-
+/**
+ * Actividad que permite al usuario seleccionar o capturar una imagen.
+ * Maneja la selección de imágenes desde la galería o la cámara, y su posterior
+ * almacenamiento en una carpeta seleccionada.
+ */
 public class ImagePickerActivity extends AppCompatActivity {
 
-    private ImageView imageView;
-    protected Uri selectedImageUri;
+    // Constantes
+    private static final String CAMERA_PERMISSION = Manifest.permission.CAMERA;
+    private static final String[] PICKER_OPTIONS = {"Tomar foto", "Seleccionar desde galería"};
+
+    // Componentes de UI
+    private ImageView previewImageView;
+    private Button confirmButton;
+
+    // Gestores y datos
+    private ImageManager imageManager;
     private FolderManager folderManager;
+    private Uri selectedImageUri;
 
-    protected ActivityResultLauncher<Intent> pickImageLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-                    selectedImageUri = result.getData().getData();
-                    imageView.setImageURI(selectedImageUri);
-                } else {
-                    finish();
-                }
-            }
-    );
+    // Activity Result Launchers
+    private final ActivityResultLauncher<Intent> galleryLauncher;
+    private final ActivityResultLauncher<Intent> cameraLauncher;
+    private final ActivityResultLauncher<String> permissionLauncher;
 
-    protected ActivityResultLauncher<Intent> takePhotoLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-                    Bitmap bitmap = (Bitmap) result.getData().getExtras().get("data");
-                    selectedImageUri = saveBitmapToUri(bitmap);
-                    imageView.setImageURI(selectedImageUri);
-                } else {
-                    finish();
-                }
-            }
-    );
+    /**
+     * Constructor que inicializa los launchers de resultados.
+     */
+    public ImagePickerActivity() {
+        galleryLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> handleGalleryResult(result.getResultCode(), result.getData())
+        );
 
-    protected final ActivityResultLauncher<String> requestPermissionLauncher = registerForActivityResult(
-            new ActivityResultContracts.RequestPermission(),
-            isGranted -> {
-                if (isGranted) {
-                    takePhoto();
-                } else {
-                    Toast.makeText(this, "Permiso de cámara denegado", Toast.LENGTH_SHORT).show();
-                    finish();
-                }
-            }
-    );
+        cameraLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> handleCameraResult(result.getResultCode(), result.getData())
+        );
+
+        permissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestPermission(),
+                this::handlePermissionResult
+        );
+    }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_image_picker);
 
-        folderManager = new FolderManager(this);
-        imageView = findViewById(R.id.imageView);
-        Button confirmButton = findViewById(R.id.confirmButton);
-
-        selectImage();
-
-        confirmButton.setOnClickListener(v -> {
-            if (selectedImageUri != null) {
-                askForImageNameAndSave(selectedImageUri); // Llama al método para obtener el nombre y luego abrir la selección de carpeta
-            } else {
-                Toast.makeText(this, "Por favor, seleccione una imagen primero", Toast.LENGTH_SHORT).show();
-            }
-        });
+        initializeManagers();
+        initializeViews();
+        setupListeners();
+        showImageSourceDialog();
     }
 
-    protected void selectImage() {
-        String[] options = {"Tomar foto", "Seleccionar desde galería"};
+    /**
+     * Inicializa los gestores necesarios.
+     */
+    private void initializeManagers() {
+        folderManager = new FolderManager(this);
+        imageManager = new ImageManager(this, folderManager);
+    }
+
+    /**
+     * Inicializa las vistas de la actividad.
+     */
+    private void initializeViews() {
+        previewImageView = findViewById(R.id.imageView);
+        confirmButton = findViewById(R.id.confirmButton);
+    }
+
+    /**
+     * Configura los listeners de la UI.
+     */
+    private void setupListeners() {
+        confirmButton.setOnClickListener(v -> handleConfirmButton());
+    }
+
+    /**
+     * Muestra el diálogo para seleccionar el origen de la imagen.
+     */
+    private void showImageSourceDialog() {
         new AlertDialog.Builder(this)
                 .setTitle("Seleccionar imagen")
-                .setItems(options, (dialog, which) -> {
+                .setItems(PICKER_OPTIONS, (dialog, which) -> {
                     if (which == 0) {
-                        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                            requestPermissionLauncher.launch(Manifest.permission.CAMERA);
-                        } else {
-                            takePhoto();
-                        }
-                    } else if (which == 1) {
-                        pickImageFromGallery();
+                        checkCameraPermissionAndLaunch();
+                    } else {
+                        launchGalleryPicker();
+                    }
+                })
+                .setNegativeButton("Cancelar", (dialog, which) -> finish())
+                .setCancelable(false)
+                .show();
+    }
+
+    /**
+     * Verifica el permiso de cámara y lanza la cámara si está permitido.
+     */
+    private void checkCameraPermissionAndLaunch() {
+        if (ContextCompat.checkSelfPermission(this, CAMERA_PERMISSION)
+                != PackageManager.PERMISSION_GRANTED) {
+            permissionLauncher.launch(CAMERA_PERMISSION);
+        } else {
+            launchCamera();
+        }
+    }
+
+    /**
+     * Lanza la aplicación de cámara.
+     */
+    private void launchCamera() {
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        cameraLauncher.launch(intent);
+    }
+
+    /**
+     * Lanza el selector de galería.
+     */
+    private void launchGalleryPicker() {
+        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        intent.setType("image/*");
+        galleryLauncher.launch(intent);
+    }
+
+    /**
+     * Maneja el resultado de la selección de galería.
+     */
+    private void handleGalleryResult(int resultCode, @Nullable Intent data) {
+        if (resultCode == RESULT_OK && data != null) {
+            selectedImageUri = data.getData();
+            updateImagePreview();
+        } else {
+            handleImageSelectionCancelled();
+        }
+    }
+
+    /**
+     * Maneja el resultado de la captura de cámara.
+     */
+    private void handleCameraResult(int resultCode, @Nullable Intent data) {
+        if (resultCode == RESULT_OK && data != null && data.getExtras() != null) {
+            Bitmap photo = (Bitmap) data.getExtras().get("data");
+            if (photo != null) {
+                selectedImageUri = imageManager.saveBitmapAsTemp(photo);
+                updateImagePreview();
+            }
+        } else {
+            handleImageSelectionCancelled();
+        }
+    }
+
+    /**
+     * Maneja el resultado del permiso de cámara.
+     */
+    private void handlePermissionResult(boolean isGranted) {
+        if (isGranted) {
+            launchCamera();
+        } else {
+            showToast("Permiso de cámara denegado");
+            showImageSourceDialog();
+        }
+    }
+
+    /**
+     * Actualiza la vista previa de la imagen.
+     */
+    private void updateImagePreview() {
+        if (selectedImageUri != null) {
+            previewImageView.setImageURI(selectedImageUri);
+            confirmButton.setEnabled(true);
+        }
+    }
+
+    /**
+     * Maneja cuando se cancela la selección de imagen.
+     */
+    private void handleImageSelectionCancelled() {
+        showToast("Selección de imagen cancelada");
+        showImageSourceDialog();
+    }
+
+    /**
+     * Maneja el click en el botón de confirmar.
+     */
+    private void handleConfirmButton() {
+        if (selectedImageUri == null) {
+            showToast("Por favor, seleccione una imagen primero");
+            return;
+        }
+        showImageNameDialog();
+    }
+
+    /**
+     * Muestra el diálogo para nombrar la imagen.
+     */
+    private void showImageNameDialog() {
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_image_name, null);
+        EditText nameInput = dialogView.findViewById(R.id.imageNameInput);
+
+        new AlertDialog.Builder(this)
+                .setTitle("Nombre de la imagen")
+                .setView(dialogView)
+                .setPositiveButton("Guardar", (dialog, which) -> {
+                    String imageName = nameInput.getText().toString().trim();
+                    if (!imageName.isEmpty()) {
+                        showFolderSelectionDialog(imageName);
+                    } else {
+                        showToast("El nombre no puede estar vacío");
                     }
                 })
                 .setNegativeButton("Cancelar", null)
                 .show();
     }
 
-    protected void takePhoto() {
-        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        takePhotoLauncher.launch(intent);
+    /**
+     * Muestra el diálogo para seleccionar la carpeta destino.
+     */
+    private void showFolderSelectionDialog(String imageName) {
+        new FolderSelectionDialog(this, folderManager, folder ->
+                saveImageToFolder(folder, imageName)).show();
     }
 
-    protected void pickImageFromGallery() {
-        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        intent.setType("image/*");
-        pickImageLauncher.launch(intent);
-    }
-
-    protected Uri saveBitmapToUri(Bitmap bitmap) {
+    /**
+     * Guarda la imagen en la carpeta seleccionada.
+     */
+    private void saveImageToFolder(Folder folder, String imageName) {
         try {
-            File imageFile = new File(getCacheDir(), "captured_image_" + System.currentTimeMillis() + ".jpg");
-            FileOutputStream outputStream = new FileOutputStream(imageFile);
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
-            outputStream.close();
-            return Uri.fromFile(imageFile);
-        } catch (IOException e) {
-            e.printStackTrace();
-            Toast.makeText(this, "Error al guardar la imagen", Toast.LENGTH_SHORT).show();
-            return null;
+            imageManager.saveImage(selectedImageUri, imageName, folder);
+            showToast("Imagen guardada en " + folder.getName());
+            finish();
+        } catch (Exception e) {
+            showToast("Error al guardar la imagen: " + e.getMessage());
         }
     }
 
-    protected void askForImageNameAndSave(Uri imageUri) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Ingrese el nombre de la imagen");
-
-        final EditText input = new EditText(this);
-        input.setHint("Nombre de la imagen");
-        builder.setView(input);
-
-        builder.setPositiveButton("Guardar", (dialog, which) -> {
-            String imageName = input.getText().toString();
-            if (!imageName.isEmpty()) {
-                openFolderSelectionDialog(imageUri, imageName); // Pasa el URI y el nombre al diálogo de selección de carpeta
-            } else {
-                Toast.makeText(this, "El nombre no puede estar vacío", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        builder.setNegativeButton("Cancelar", (dialog, which) -> dialog.cancel());
-
-        builder.show();
+    /**
+     * Muestra un mensaje Toast.
+     */
+    private void showToast(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
-    protected void openFolderSelectionDialog(Uri imageUri, String imageName) {
-        FolderSelectionDialog dialog = new FolderSelectionDialog(this, folderManager, folder -> {
-            try {
-                File imageFile = FileUtils.saveImageToFolder(this, imageUri, folder.getName());
-                folder.addImage(new Image(imageFile.getAbsolutePath(), imageName)); // Asigna el nombre a la imagen
-                folderManager.updateFolder(folder);
-                Toast.makeText(this, "Imagen guardada en " + folder.getName(), Toast.LENGTH_SHORT).show();
-                finish();
-            } catch (IOException e) {
-                e.printStackTrace();
-                Toast.makeText(this, "Error al guardar la imagen", Toast.LENGTH_SHORT).show();
-            }
-        });
-        dialog.show();
-    }
+    /**
+     * Método de prueba para establecer una URI de imagen.
+     * Solo se usa en pruebas unitarias.
+     */
     public void setSelectedImageUri(Uri uri) {
         this.selectedImageUri = uri;
     }
-
 }
