@@ -14,7 +14,7 @@
         android:textSize="20sp"
         android:paddingBottom="8dp" />
 
-    <!-- RecyclerView para mostrar las imágenes con el prefijo completo -->
+    <!-- RecyclerView para mostrar las imágenes -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/imagesRecyclerView"
         android:layout_width="match_parent"

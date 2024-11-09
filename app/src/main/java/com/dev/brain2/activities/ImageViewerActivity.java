@@ -1,67 +1,49 @@
-package com.dev.brain2;
+package com.dev.brain2.activities;
 
 import android.net.Uri;
 import android.os.Bundle;
 import android.widget.ImageView;
 import android.widget.Toast;
+
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
-/**
- * Actividad que muestra una imagen en pantalla completa.
- *
- * Responsabilidad única (SRP): Mostrar una imagen en pantalla completa.
- * Esta clase se mantiene simple y enfocada en su única tarea:
- * recibir una URI de imagen y mostrarla.
- */
+import com.dev.brain2.R;
+
+
 public class ImageViewerActivity extends AppCompatActivity {
 
-    // Constante para la clave del intent
-    private static final String EXTRA_IMAGE_URI = "imageUri";
+    public static final String EXTRA_IMAGE_URI = "imageUri";
 
-    // Vista principal
     private ImageView imageView;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_image_viewer);
 
         initializeView();
         loadImageFromIntent();
     }
 
-    /**
-     * Inicializa la vista principal de la actividad.
-     */
     private void initializeView() {
+        setContentView(R.layout.activity_image_viewer);
         imageView = findViewById(R.id.fullImageView);
     }
 
-    /**
-     * Carga la imagen desde el Intent.
-     * Si hay algún error, muestra un mensaje y cierra la actividad.
-     */
     private void loadImageFromIntent() {
-        String imageUriString = getIntent().getStringExtra(EXTRA_IMAGE_URI);
+        Uri imageUri = getIntent().getParcelableExtra(EXTRA_IMAGE_URI);
 
-        if (imageUriString == null) {
+        if (imageUri == null) {
             showError("No se encontró la imagen");
             finish();
             return;
         }
 
-        displayImage(imageUriString);
+        displayImage(imageUri);
     }
 
-    /**
-     * Muestra la imagen en el ImageView.
-     *
-     * @param imageUriString URI de la imagen a mostrar
-     */
-    private void displayImage(String imageUriString) {
+    private void displayImage(Uri imageUri) {
         try {
-            Uri imageUri = Uri.parse(imageUriString);
             imageView.setImageURI(imageUri);
 
             if (imageView.getDrawable() == null) {
@@ -74,11 +56,6 @@ public class ImageViewerActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * Muestra un mensaje de error al usuario.
-     *
-     * @param message Mensaje a mostrar
-     */
     private void showError(String message) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }

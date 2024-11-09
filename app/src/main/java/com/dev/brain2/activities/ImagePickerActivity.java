@@ -1,10 +1,11 @@
-package com.dev.brain2;
+package com.dev.brain2.activities;
 
 import android.Manifest;
 import android.content.Intent;
-import android.graphics.Bitmap;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.widget.Button;
 import android.widget.EditText;
@@ -12,102 +13,102 @@ import android.widget.ImageView;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 import android.widget.Toast;
-import android.content.pm.PackageManager;
 import android.view.View;
-import android.view.LayoutInflater;
 
-/**
- * Actividad que permite al usuario seleccionar o capturar una imagen.
- * Maneja la selección de imágenes desde la galería o la cámara, y su posterior
- * almacenamiento en una carpeta seleccionada.
- */
+import com.dev.brain2.R;
+import com.dev.brain2.managers.FolderManager;
+import com.dev.brain2.managers.ImageManager;
+import com.dev.brain2.models.Folder;
+import com.dev.brain2.utils.FolderSelectionDialog;
+
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 public class ImagePickerActivity extends AppCompatActivity {
 
-    // Constantes
     private static final String CAMERA_PERMISSION = Manifest.permission.CAMERA;
     private static final String[] PICKER_OPTIONS = {"Tomar foto", "Seleccionar desde galería"};
 
-    // Componentes de UI
     private ImageView previewImageView;
     private Button confirmButton;
 
-    // Gestores y datos
     private ImageManager imageManager;
     private FolderManager folderManager;
     private Uri selectedImageUri;
 
-    // Activity Result Launchers
-    private final ActivityResultLauncher<Intent> galleryLauncher;
-    private final ActivityResultLauncher<Intent> cameraLauncher;
-    private final ActivityResultLauncher<String> permissionLauncher;
+    private ActivityResultLauncher<Intent> galleryLauncher;
+    private ActivityResultLauncher<Uri> cameraLauncher;
+    private ActivityResultLauncher<String[]> permissionLauncher;
 
-    /**
-     * Constructor que inicializa los launchers de resultados.
-     */
-    public ImagePickerActivity() {
+    private String currentPhotoPath;
+
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        setContentView(R.layout.activity_image_picker);
+        initializeManagers();
+        initializeViews();
+        setupListeners();
+        setupActivityResultLaunchers();
+
+        if (savedInstanceState != null) {
+            selectedImageUri = savedInstanceState.getParcelable("selectedImageUri");
+            updateImagePreview();
+        } else {
+            showImageSourceDialog();
+        }
+    }
+
+    private void initializeManagers() {
+        folderManager = new FolderManager(this);
+        imageManager = new ImageManager(this, folderManager);
+    }
+
+    private void initializeViews() {
+        previewImageView = findViewById(R.id.imageView);
+        confirmButton = findViewById(R.id.confirmButton);
+    }
+
+    private void setupListeners() {
+        confirmButton.setOnClickListener(v -> handleConfirmButton());
+    }
+
+    private void setupActivityResultLaunchers() {
         galleryLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> handleGalleryResult(result.getResultCode(), result.getData())
         );
 
         cameraLauncher = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(),
-                result -> handleCameraResult(result.getResultCode(), result.getData())
+                new ActivityResultContracts.TakePicture(),
+                result -> {
+                    if (result) {
+                        updateImagePreview();
+                    } else {
+                        handleImageSelectionCancelled();
+                    }
+                }
         );
 
         permissionLauncher = registerForActivityResult(
-                new ActivityResultContracts.RequestPermission(),
-                this::handlePermissionResult
+                new ActivityResultContracts.RequestMultiplePermissions(),
+                result -> handlePermissionResult(result)
         );
     }
 
-    @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_image_picker);
-
-        initializeManagers();
-        initializeViews();
-        setupListeners();
-        showImageSourceDialog();
-    }
-
-    /**
-     * Inicializa los gestores necesarios.
-     */
-    private void initializeManagers() {
-        folderManager = new FolderManager(this);
-        imageManager = new ImageManager(this, folderManager);
-    }
-
-    /**
-     * Inicializa las vistas de la actividad.
-     */
-    private void initializeViews() {
-        previewImageView = findViewById(R.id.imageView);
-        confirmButton = findViewById(R.id.confirmButton);
-    }
-
-    /**
-     * Configura los listeners de la UI.
-     */
-    private void setupListeners() {
-        confirmButton.setOnClickListener(v -> handleConfirmButton());
-    }
-
-    /**
-     * Muestra el diálogo para seleccionar el origen de la imagen.
-     */
     private void showImageSourceDialog() {
-        new AlertDialog.Builder(this)
+        new androidx.appcompat.app.AlertDialog.Builder(this)
                 .setTitle("Seleccionar imagen")
                 .setItems(PICKER_OPTIONS, (dialog, which) -> {
                     if (which == 0) {
-                        checkCameraPermissionAndLaunch();
+                        checkPermissionsAndLaunchCamera();
                     } else {
                         launchGalleryPicker();
                     }
@@ -117,38 +118,49 @@ public class ImagePickerActivity extends AppCompatActivity {
                 .show();
     }
 
-    /**
-     * Verifica el permiso de cámara y lanza la cámara si está permitido.
-     */
-    private void checkCameraPermissionAndLaunch() {
-        if (ContextCompat.checkSelfPermission(this, CAMERA_PERMISSION)
-                != PackageManager.PERMISSION_GRANTED) {
-            permissionLauncher.launch(CAMERA_PERMISSION);
+    private void checkPermissionsAndLaunchCamera() {
+        if (ContextCompat.checkSelfPermission(this, CAMERA_PERMISSION) != PackageManager.PERMISSION_GRANTED) {
+            permissionLauncher.launch(new String[]{CAMERA_PERMISSION});
         } else {
             launchCamera();
         }
     }
 
-    /**
-     * Lanza la aplicación de cámara.
-     */
     private void launchCamera() {
-        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        cameraLauncher.launch(intent);
+        try {
+            File photoFile = createImageFile();
+            if (photoFile != null) {
+                selectedImageUri = FileProvider.getUriForFile(this,
+                        "com.dev.brain2.fileprovider",
+                        photoFile);
+                cameraLauncher.launch(selectedImageUri);
+            }
+        } catch (IOException ex) {
+            showToast("Error al crear el archivo de imagen");
+        }
     }
 
-    /**
-     * Lanza el selector de galería.
-     */
+    private File createImageFile() throws IOException {
+        // Crear un nombre de archivo único
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + "_";
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        File image = File.createTempFile(
+                imageFileName,  /* prefijo */
+                ".jpg",         /* sufijo */
+                storageDir      /* directorio */
+        );
+
+        // Guardar la ruta para usarla después
+        currentPhotoPath = image.getAbsolutePath();
+        return image;
+    }
+
     private void launchGalleryPicker() {
         Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-        intent.setType("image/*");
         galleryLauncher.launch(intent);
     }
 
-    /**
-     * Maneja el resultado de la selección de galería.
-     */
     private void handleGalleryResult(int resultCode, @Nullable Intent data) {
         if (resultCode == RESULT_OK && data != null) {
             selectedImageUri = data.getData();
@@ -158,36 +170,22 @@ public class ImagePickerActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * Maneja el resultado de la captura de cámara.
-     */
-    private void handleCameraResult(int resultCode, @Nullable Intent data) {
-        if (resultCode == RESULT_OK && data != null && data.getExtras() != null) {
-            Bitmap photo = (Bitmap) data.getExtras().get("data");
-            if (photo != null) {
-                selectedImageUri = imageManager.saveBitmapAsTemp(photo);
-                updateImagePreview();
+    private void handlePermissionResult(java.util.Map<String, Boolean> permissions) {
+        boolean allGranted = true;
+        for (Boolean granted : permissions.values()) {
+            if (!granted) {
+                allGranted = false;
+                break;
             }
-        } else {
-            handleImageSelectionCancelled();
         }
-    }
-
-    /**
-     * Maneja el resultado del permiso de cámara.
-     */
-    private void handlePermissionResult(boolean isGranted) {
-        if (isGranted) {
+        if (allGranted) {
             launchCamera();
         } else {
-            showToast("Permiso de cámara denegado");
+            showToast("Permisos necesarios denegados");
             showImageSourceDialog();
         }
     }
 
-    /**
-     * Actualiza la vista previa de la imagen.
-     */
     private void updateImagePreview() {
         if (selectedImageUri != null) {
             previewImageView.setImageURI(selectedImageUri);
@@ -195,17 +193,11 @@ public class ImagePickerActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * Maneja cuando se cancela la selección de imagen.
-     */
     private void handleImageSelectionCancelled() {
         showToast("Selección de imagen cancelada");
         showImageSourceDialog();
     }
 
-    /**
-     * Maneja el click en el botón de confirmar.
-     */
     private void handleConfirmButton() {
         if (selectedImageUri == null) {
             showToast("Por favor, seleccione una imagen primero");
@@ -214,14 +206,11 @@ public class ImagePickerActivity extends AppCompatActivity {
         showImageNameDialog();
     }
 
-    /**
-     * Muestra el diálogo para nombrar la imagen.
-     */
     private void showImageNameDialog() {
         View dialogView = getLayoutInflater().inflate(R.layout.dialog_image_name, null);
         EditText nameInput = dialogView.findViewById(R.id.imageNameInput);
 
-        new AlertDialog.Builder(this)
+        new androidx.appcompat.app.AlertDialog.Builder(this)
                 .setTitle("Nombre de la imagen")
                 .setView(dialogView)
                 .setPositiveButton("Guardar", (dialog, which) -> {
@@ -236,17 +225,13 @@ public class ImagePickerActivity extends AppCompatActivity {
                 .show();
     }
 
-    /**
-     * Muestra el diálogo para seleccionar la carpeta destino.
-     */
     private void showFolderSelectionDialog(String imageName) {
-        new FolderSelectionDialog(this, folderManager, folder ->
-                saveImageToFolder(folder, imageName)).show();
+        FolderSelectionDialog folderSelectionDialog = new FolderSelectionDialog(this, folderManager, folder -> {
+            saveImageToFolder(folder, imageName);
+        });
+        folderSelectionDialog.show();
     }
 
-    /**
-     * Guarda la imagen en la carpeta seleccionada.
-     */
     private void saveImageToFolder(Folder folder, String imageName) {
         try {
             imageManager.saveImage(selectedImageUri, imageName, folder);
@@ -257,18 +242,21 @@ public class ImagePickerActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * Muestra un mensaje Toast.
-     */
     private void showToast(String message) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
-    /**
-     * Método de prueba para establecer una URI de imagen.
-     * Solo se usa en pruebas unitarias.
-     */
-    public void setSelectedImageUri(Uri uri) {
-        this.selectedImageUri = uri;
+    // Manejo de cambios de configuración
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putParcelable("selectedImageUri", selectedImageUri);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        selectedImageUri = savedInstanceState.getParcelable("selectedImageUri");
+        updateImagePreview();
     }
 }

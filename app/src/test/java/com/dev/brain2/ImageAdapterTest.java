@@ -2,13 +2,13 @@ package com.dev.brain2;
 
 import android.net.Uri;
 import com.dev.brain2.Folder;
-import com.dev.brain2.FolderManager;
+import com.dev.brain2.managers.FolderManager;
 import com.dev.brain2.Image;
 import com.dev.brain2.ImageAdapter;
-import org.junit.Before;
+
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
-import java.util.ArrayList;
+
 import java.util.List;
 
 public class ImageAdapterTest {

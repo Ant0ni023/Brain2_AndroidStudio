@@ -1,5 +1,5 @@
 plugins {
-    alias(libs.plugins.android.application)
+    id 'com.android.application'
 }
 
 android {
@@ -22,6 +22,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
@@ -29,59 +30,20 @@ android {
 }
 
 dependencies {
-
     implementation libs.appcompat
     implementation libs.material
     implementation libs.activity
     implementation libs.constraintlayout
-    testImplementation libs.junit
-    testImplementation libs.ext.junit
-    testImplementation libs.androidx.espresso.core
-    testImplementation libs.androidx.rules
-    androidTestImplementation libs.ext.junit
-    androidTestImplementation libs.espresso.core
-    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.6.1'
-    testImplementation 'org.mockito:mockito-core:5.4.0'
-    androidTestImplementation 'org.mockito:mockito-android:5.4.0'
-    androidTestImplementation 'androidx.test:runner:1.6.2'
-    androidTestImplementation 'androidx.test:rules:1.6.1'
-
-    // Agregamos la dependencia de Gson
+    implementation libs.recyclerview
     implementation libs.gson
 
-    // Agregamos la dependencia de RecyclerView
-    implementation 'androidx.recyclerview:recyclerview:1.2.1'
-    testImplementation 'junit:junit:4.13.2'
-    testImplementation 'org.mockito:mockito-core:3.12.4'
-    testImplementation 'org.robolectric:robolectric:4.7.3'
-    dependencies {
-        // Mockito core library
-        testImplementation 'org.mockito:mockito-core:4.10.0'
+    testImplementation libs.junit
+    testImplementation libs.mockitoCore
+    testImplementation libs.robolectric
 
-        // For using Mockito in instrumented tests
-        androidTestImplementation 'org.mockito:mockito-android:4.10.0'
-
-        // Optional: Mockito Kotlin support if your project is in Kotlin
-        // androidTestImplementation 'org.mockito.kotlin:mockito-kotlin:4.0.0'
-
-        // Other dependencies for AndroidX and JUnit (optional)
-        androidTestImplementation 'androidx.test.ext:junit:1.1.5'
-        androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
-
-        testImplementation 'org.robolectric:robolectric:4.10.3' // Make sure to use the latest version
-        testImplementation 'org.robolectric:robolectric:4.8' // Make sure to use the latest version
-        testImplementation 'org.mockito:mockito-core:5.4.0' // Make sure to use the latest version
-        androidTestImplementation 'org.mockito:mockito-android:5.4.0' // If you need Android specific features
-
-        testImplementation 'junit:junit:4.13.2' // Asegúrate de tener JUnit
-        testImplementation 'org.mockito:mockito-core:4.8.0' // Para Mockito
-        testImplementation 'org.robolectric:robolectric:4.8' // Para Robolectric
-
-        testImplementation 'junit:junit:4.13.2'
-        testImplementation 'org.mockito:mockito-core:4.0.0'
-        androidTestImplementation 'androidx.recyclerview:recyclerview:1.2.1'
-
-    }
-
+    androidTestImplementation libs.extJunit
+    androidTestImplementation libs.espressoCore
+    androidTestImplementation libs.mockitoAndroid
+    androidTestImplementation libs.testRunner
+    androidTestImplementation libs.testRules
 }

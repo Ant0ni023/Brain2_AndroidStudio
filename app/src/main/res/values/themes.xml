@@ -1,3 +1,4 @@
+<!-- themes.xml -->
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Tema de aplicación para modo claro -->
     <style name="Theme.Brain2" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
