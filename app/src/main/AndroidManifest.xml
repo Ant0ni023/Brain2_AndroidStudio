@@ -45,5 +45,7 @@
         <activity android:name=".activities.FolderContentActivity" />
         <activity android:name=".activities.ImagePickerActivity" />
         <activity android:name=".activities.ImageViewerActivity" />
+        <activity android:name=".activities.ImageGalleryActivity" />
+
     </application>
 </manifest>

@@ -15,6 +15,8 @@ import com.dev.brain2.models.Folder;
 import com.dev.brain2.utils.Notifier;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import java.util.List;
+import android.widget.Button;
+import com.dev.brain2.activities.ImageGalleryActivity;
 
 public class MainActivity extends AppCompatActivity implements OnFolderClickListener {
 
@@ -29,10 +31,14 @@ public class MainActivity extends AppCompatActivity implements OnFolderClickList
     private FolderAdapter folderAdapter;
     private List<Folder> folderList;
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+
 
         // Inicializamos los gestores
         folderManager = new FolderManager(this);
@@ -46,6 +52,14 @@ public class MainActivity extends AppCompatActivity implements OnFolderClickList
         setupRecyclerView();
         setupBottomNavigationView();
         loadFolders();
+
+        // Configura el botón de búsqueda
+        Button searchButton = findViewById(R.id.searchButton);
+        searchButton.setOnClickListener(v -> {
+            // Al hacer clic en el botón de búsqueda, se abre la ImageGalleryActivity
+            Intent intent = new Intent(MainActivity.this, ImageGalleryActivity.class);
+            startActivity(intent);
+        });
     }
 
     private void setupRecyclerView() {
