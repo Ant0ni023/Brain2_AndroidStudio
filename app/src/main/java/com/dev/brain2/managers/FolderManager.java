@@ -172,4 +172,10 @@ public class FolderManager {
         availableFolders.removeIf(folder -> folder.getId().equals(excludeFolder.getId()));
         return availableFolders;
     }
+
+    // Obtiene la lista de todas las carpetas (Alias de getFolders)
+    public List<Folder> getAllFolders() {
+        return getFolders();
+    }
+
 }

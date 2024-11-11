@@ -9,6 +9,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+
 
 // Esta clase se encarga de gestionar las imágenes de la aplicación
 public class ImageManager {
@@ -113,5 +116,17 @@ public class ImageManager {
             return true;
         }
         return false;
+    }
+
+    public List<Image> getAllImages() {
+        List<Image> allImages = new ArrayList<>();
+
+        // Supón que folderManager tiene un método para obtener todas las carpetas
+        List<Folder> folders = folderManager.getAllFolders();
+        for (Folder folder : folders) {
+            allImages.addAll(folder.getImages());
+        }
+
+        return allImages;
     }
 }
