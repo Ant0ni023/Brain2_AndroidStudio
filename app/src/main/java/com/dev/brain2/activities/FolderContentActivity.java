@@ -5,111 +5,102 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Toast;
 import android.widget.TextView;
-import android.widget.EditText;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.dev.brain2.R;
 import com.dev.brain2.adapters.ImageAdapter;
 import com.dev.brain2.interfaces.OnImageClickListener;
+import com.dev.brain2.managers.DialogManager;
 import com.dev.brain2.managers.FolderManager;
 import com.dev.brain2.managers.ImageManager;
 import com.dev.brain2.models.Folder;
 import com.dev.brain2.models.Image;
-
+import com.dev.brain2.utils.Notifier;
 import java.util.List;
 
-
+// Esta actividad muestra el contenido de una carpeta específica y permite gestionar sus imágenes
 public class FolderContentActivity extends AppCompatActivity implements OnImageClickListener {
 
+    // Clave para obtener el ID de la carpeta del Intent
     private static final String EXTRA_FOLDER_ID = "folderId";
 
-    private TextView folderTitleView;
-    private RecyclerView imagesRecyclerView;
+    // Componentes de la interfaz de usuario
+    private TextView folderTitleView;      // Muestra el nombre de la carpeta
+    private RecyclerView imagesRecyclerView; // Lista de imágenes en cuadrícula
 
-    private ImageAdapter imageAdapter;
-    private FolderManager folderManager;
-    private ImageManager imageManager;
+    // Gestores y adaptadores
+    private ImageAdapter imageAdapter;     // Maneja la visualización de imágenes
+    private FolderManager folderManager;   // Gestiona operaciones con carpetas
+    private ImageManager imageManager;     // Gestiona operaciones con imágenes
+    private DialogManager dialogManager;   // Gestiona los diálogos de la aplicación
 
-    private Folder currentFolder;
-    private List<Image> imageList;
+    // Datos de la carpeta actual
+    private Folder currentFolder;        // La carpeta que se está visualizando
+    private List<Image> imageList;       // Lista de imágenes en la carpeta
 
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_folder_content);
 
-        initializeManagers();
-        initializeViews();
-        loadFolderFromIntent();
-        setupRecyclerView();
-        displayFolderContent();
-    }
-
-    private void initializeManagers() {
+        // Inicializamos los gestores necesarios
         folderManager = new FolderManager(this);
         imageManager = new ImageManager(this, folderManager);
-    }
+        dialogManager = new DialogManager(this, folderManager, imageManager);
 
-    private void initializeViews() {
+        // Obtenemos referencias a las vistas
         folderTitleView = findViewById(R.id.folderTitle);
         imagesRecyclerView = findViewById(R.id.imagesRecyclerView);
+
+        // Configuramos la actividad
+        loadFolderFromIntent();  // Cargamos la carpeta desde el Intent
+        setupRecyclerView();     // Configuramos la vista de imágenes
+        displayFolderContent();  // Mostramos el contenido
     }
 
+    // Carga la carpeta usando el ID recibido en el Intent
     private void loadFolderFromIntent() {
         Intent intent = getIntent();
         if (intent != null && intent.hasExtra(EXTRA_FOLDER_ID)) {
             String folderId = intent.getStringExtra(EXTRA_FOLDER_ID);
             currentFolder = folderManager.getFolderById(folderId);
             if (currentFolder == null) {
-                handleFolderLoadError();
+                showToast("No se pudo cargar la carpeta");
+                finish();
                 return;
             }
-            updateFolderTitle();
-        } else {
-            handleFolderLoadError();
-        }
-    }
-
-    private void handleFolderLoadError() {
-        showToast("No se pudo cargar la carpeta");
-        finish();
-    }
-
-    private void updateFolderTitle() {
-        if (currentFolder != null) {
             folderTitleView.setText(currentFolder.getName());
+        } else {
+            showToast("No se pudo cargar la carpeta");
+            finish();
         }
     }
 
+    // Configura el RecyclerView en formato de cuadrícula
     private void setupRecyclerView() {
-        if (currentFolder == null) return;
-
         imagesRecyclerView.setLayoutManager(new GridLayoutManager(this, 3));
         imageList = currentFolder.getImages();
         imageAdapter = new ImageAdapter(this, imageList, this);
         imagesRecyclerView.setAdapter(imageAdapter);
     }
 
+    // Muestra el contenido de la carpeta
     private void displayFolderContent() {
         if (currentFolder == null) {
             finish();
             return;
         }
 
-        if (currentFolder.isEmpty()) {
-            // Mostrar mensaje o vista vacía
+        if (currentFolder.getImages().isEmpty()) {
             showToast("La carpeta está vacía");
         }
-
         imagesRecyclerView.setVisibility(View.VISIBLE);
     }
 
+    // Actualiza el contenido cuando hay cambios
     private void refreshContent() {
         if (currentFolder != null && imageAdapter != null) {
-            // Recargar currentFolder desde FolderManager por ID
             currentFolder = folderManager.getFolderById(currentFolder.getId());
             if (currentFolder == null) {
                 showToast("La carpeta ya no existe");
@@ -122,13 +113,14 @@ public class FolderContentActivity extends AppCompatActivity implements OnImageC
         }
     }
 
+    // Se llama cuando la actividad vuelve a primer plano
     @Override
     protected void onResume() {
         super.onResume();
         refreshContent();
     }
 
-    // Implementación de OnImageClickListener
+    // Maneja el clic en una imagen
     @Override
     public void onImageClick(Image image) {
         Intent intent = new Intent(this, ImageViewerActivity.class);
@@ -136,106 +128,46 @@ public class FolderContentActivity extends AppCompatActivity implements OnImageC
         startActivity(intent);
     }
 
+    // Maneja el clic largo en una imagen
     @Override
     public void onImageLongClick(Image image, int position) {
-        showImageOptionsDialog(image, position);
+        showImageOptionsDialog(image);
     }
 
-    private void showImageOptionsDialog(Image image, int position) {
+    // Muestra el diálogo con opciones para la imagen seleccionada
+    private void showImageOptionsDialog(Image image) {
+        // Opciones disponibles para la imagen
         String[] options = {"Mover a otra carpeta", "Eliminar imagen", "Cambiar nombre de imagen"};
 
+        // Creamos y mostramos el diálogo
         new androidx.appcompat.app.AlertDialog.Builder(this)
                 .setTitle("Opciones de imagen")
                 .setItems(options, (dialog, which) -> {
                     switch (which) {
-                        case 0:
-                            showMoveImageDialog(image);
+                        case 0: // Mover imagen
+                            dialogManager.showImageMoveDialog(currentFolder, image, this::refreshContent);
                             break;
-                        case 1:
-                            showDeleteConfirmationDialog(image);
+                        case 1: // Eliminar imagen
+                            Notifier.showDeleteConfirmation(this,
+                                    "¿Está seguro de que desea eliminar esta imagen?",
+                                    () -> {
+                                        if (imageManager.deleteImage(image, currentFolder)) {
+                                            showToast("Imagen eliminada");
+                                            refreshContent();
+                                        } else {
+                                            showToast("Error al eliminar la imagen");
+                                        }
+                                    });
                             break;
-                        case 2:
-                            showRenameImageDialog(image);
+                        case 2: // Renombrar imagen
+                            dialogManager.showImageRenameDialog(currentFolder, image, this::refreshContent);
                             break;
                     }
                 })
                 .show();
     }
 
-    private void showMoveImageDialog(Image image) {
-        List<Folder> availableFolders = folderManager.getAvailableFolders(currentFolder);
-
-        if (availableFolders.isEmpty()) {
-            showToast("No hay otras carpetas disponibles");
-            return;
-        }
-
-        String[] folderNames = new String[availableFolders.size()];
-        for (int i = 0; i < availableFolders.size(); i++) {
-            folderNames[i] = availableFolders.get(i).getName();
-        }
-
-        new androidx.appcompat.app.AlertDialog.Builder(this)
-                .setTitle("Mover imagen a otra carpeta")
-                .setItems(folderNames, (dialog, which) -> {
-                    Folder targetFolder = availableFolders.get(which);
-                    moveImage(image, targetFolder);
-                })
-                .show();
-    }
-
-    private void moveImage(Image image, Folder targetFolder) {
-        if (imageManager.moveImage(image, currentFolder, targetFolder)) {
-            showToast("Imagen movida a " + targetFolder.getName());
-            refreshContent();
-        } else {
-            showToast("Error al mover la imagen");
-        }
-    }
-
-    private void showDeleteConfirmationDialog(Image image) {
-        new androidx.appcompat.app.AlertDialog.Builder(this)
-                .setTitle("Eliminar imagen")
-                .setMessage("¿Está seguro de que desea eliminar esta imagen?")
-                .setPositiveButton("Eliminar", (dialog, which) -> deleteImage(image))
-                .setNegativeButton("Cancelar", null)
-                .show();
-    }
-
-    private void deleteImage(Image image) {
-        if (imageManager.deleteImage(image, currentFolder)) {
-            showToast("Imagen eliminada");
-            refreshContent();
-        } else {
-            showToast("Error al eliminar la imagen");
-        }
-    }
-
-    private void showRenameImageDialog(Image image) {
-        View dialogView = getLayoutInflater().inflate(R.layout.dialog_rename_image, null);
-        EditText nameInput = dialogView.findViewById(R.id.imageNameInput);
-        nameInput.setText(image.getName());
-
-        new androidx.appcompat.app.AlertDialog.Builder(this)
-                .setTitle("Cambiar nombre de imagen")
-                .setView(dialogView)
-                .setPositiveButton("Guardar", (dialog, which) -> {
-                    String newName = nameInput.getText().toString().trim();
-                    if (!newName.isEmpty()) {
-                        if (imageManager.renameImage(image, newName, currentFolder)) {
-                            showToast("Nombre cambiado a " + newName);
-                            refreshContent();
-                        } else {
-                            showToast("Error al renombrar la imagen");
-                        }
-                    } else {
-                        showToast("El nombre no puede estar vacío");
-                    }
-                })
-                .setNegativeButton("Cancelar", null)
-                .show();
-    }
-
+    // Método auxiliar para mostrar mensajes al usuario
     private void showToast(String message) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }

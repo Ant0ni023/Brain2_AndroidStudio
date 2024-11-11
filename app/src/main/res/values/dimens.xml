@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dimensiones generales -->
+    <dimen name="margin_normal">16dp</dimen>
+    <dimen name="spacing_normal">8dp</dimen>
+
+    <!-- Dimensiones de navegación -->
+    <dimen name="nav_bar_height">56dp</dimen>
+</resources>

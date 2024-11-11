@@ -2,20 +2,13 @@
     package="com.dev.brain2">
 
     <!-- Permisos necesarios -->
-    <!-- Permiso para usar la cámara -->
     <uses-permission android:name="android.permission.CAMERA" />
-
-    <!-- Permisos para acceder a los archivos multimedia -->
-    <!-- Para Android 13 y superiores -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
-
-    <!-- Para Android 12 y anteriores -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
 
-    <!-- Declaración de característica de cámara para no requerir hardware específico -->
     <uses-feature android:name="android.hardware.camera" android:required="false" />
 
     <application
@@ -28,7 +21,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Brain2">
 
-        <!-- Declaración de FileProvider -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="com.dev.brain2.fileprovider"
@@ -39,7 +31,6 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
-        <!-- Actividades declaradas -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
@@ -52,7 +43,5 @@
         <activity android:name=".activities.FolderContentActivity" />
         <activity android:name=".activities.ImagePickerActivity" />
         <activity android:name=".activities.ImageViewerActivity" />
-
     </application>
-
 </manifest>

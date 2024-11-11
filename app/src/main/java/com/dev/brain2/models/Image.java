@@ -4,90 +4,79 @@ import android.net.Uri;
 import java.io.Serializable;
 import java.util.UUID;
 
-/**
- * Clase que representa una imagen en la aplicación.
- * Implementa Serializable para permitir su paso entre componentes de Android.
- *
- * Responsabilidad única: Representar y mantener los datos de una imagen.
- */
+// Esta clase representa una imagen en la aplicación
 public class Image implements Serializable {
+    // Propiedades básicas de la imagen
+    private String id;              // Identificador único de la imagen
+    private transient Uri uri;      // URI que indica dónde está guardada la imagen (transient porque Uri no es serializable)
+    private String name;            // Nombre de la imagen
+    private String uriString;       // Guardamos la URI como String para poder serializar
 
-    private String id;    // Identificador único de la imagen
-    private transient Uri uri;      // URI que indica la ubicación de la imagen (transient para evitar la serialización)
-    private String name;  // Nombre descriptivo de la imagen
-
-    // Campo adicional para la serialización del URI
-    private String uriString;
-
-    /**
-     * Constructor que crea una nueva imagen con URI y nombre específicos.
-     *
-     * @param uri  URI que indica la ubicación de la imagen
-     * @param name Nombre descriptivo de la imagen
-     */
+    // Constructor: crea una nueva imagen con una URI y un nombre
     public Image(Uri uri, String name) {
-        this.id = UUID.randomUUID().toString();
+        // Verificamos que la URI no sea nula
+        if (uri == null) {
+            throw new IllegalArgumentException("La URI no puede ser nula");
+        }
+        // Verificamos que el nombre no esté vacío
+        if (name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException("El nombre no puede estar vacío");
+        }
+
+        // Inicializamos las propiedades
+        this.id = UUID.randomUUID().toString();  // Generamos un ID único
         this.uri = uri;
         this.name = name;
-        this.uriString = uri.toString();
+        this.uriString = uri.toString();         // Guardamos la URI como String
     }
 
-    /**
-     * Obtiene el ID de la imagen.
-     *
-     * @return ID de la imagen
-     */
+    // GETTERS Y SETTERS
+
+    // Obtiene el ID de la imagen
     public String getId() {
         return id;
     }
 
-    /**
-     * Obtiene la URI de la imagen.
-     *
-     * @return URI de la imagen
-     */
+    // Obtiene la URI de la imagen (con verificaciones de seguridad)
     public Uri getUri() {
+        // Si la URI es nula pero tenemos el String, la reconstruimos
         if (uri == null && uriString != null) {
             uri = Uri.parse(uriString);
+        }
+        // Verificamos que la URI esté disponible
+        if (uri == null) {
+            throw new IllegalStateException("La URI no está disponible");
         }
         return uri;
     }
 
-    /**
-     * Establece una nueva URI para la imagen.
-     *
-     * @param uri Nueva URI de la imagen
-     */
+    // Establece una nueva URI para la imagen
     public void setUri(Uri uri) {
+        // Verificamos que la nueva URI no sea nula
+        if (uri == null) {
+            throw new IllegalArgumentException("La URI no puede ser nula");
+        }
         this.uri = uri;
-        this.uriString = uri.toString();
+        this.uriString = uri.toString();  // Actualizamos también el String
     }
 
-    /**
-     * Obtiene el nombre de la imagen.
-     *
-     * @return Nombre de la imagen
-     */
+    // Obtiene el nombre de la imagen
     public String getName() {
         return name;
     }
 
-    /**
-     * Establece un nuevo nombre para la imagen.
-     *
-     * @param name Nuevo nombre de la imagen
-     */
+    // Establece un nuevo nombre para la imagen
     public void setName(String name) {
+        // Verificamos que el nuevo nombre no esté vacío
+        if (name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException("El nombre no puede estar vacío");
+        }
         this.name = name;
     }
 
-    /**
-     * Método especial que se llama después de la deserialización.
-     * Reconstruye el objeto Uri a partir de uriString.
-     *
-     * @return este objeto Image con el Uri reconstruido
-     */
+    // Este método se llama automáticamente al deserializar la imagen
     private Object readResolve() {
+        // Reconstruimos la URI desde el String guardado
         if (uriString != null) {
             uri = Uri.parse(uriString);
         }
