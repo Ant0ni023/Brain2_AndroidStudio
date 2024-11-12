@@ -38,8 +38,6 @@ public class MainActivity extends AppCompatActivity implements OnFolderClickList
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
-
         // Inicializamos los gestores
         folderManager = new FolderManager(this);
         dialogManager = new DialogManager(this, folderManager, null);
@@ -52,14 +50,6 @@ public class MainActivity extends AppCompatActivity implements OnFolderClickList
         setupRecyclerView();
         setupBottomNavigationView();
         loadFolders();
-
-        // Configura el botón de búsqueda
-        Button searchButton = findViewById(R.id.searchButton);
-        searchButton.setOnClickListener(v -> {
-            // Al hacer clic en el botón de búsqueda, se abre la ImageGalleryActivity
-            Intent intent = new Intent(MainActivity.this, ImageGalleryActivity.class);
-            startActivity(intent);
-        });
     }
 
     private void setupRecyclerView() {
@@ -90,6 +80,11 @@ public class MainActivity extends AppCompatActivity implements OnFolderClickList
                 return true;
             } else if (itemId == R.id.nav_home) {
                 loadFolders();
+                return true;
+            } else if (itemId == R.id.nav_search) { // Identificador del ícono de lupa
+                // Abre la ImageGalleryActivity al hacer clic en el ícono de búsqueda
+                Intent intent = new Intent(this, ImageGalleryActivity.class);
+                startActivity(intent);
                 return true;
             }
             return false;
