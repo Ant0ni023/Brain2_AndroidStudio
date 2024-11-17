@@ -2,6 +2,8 @@ package com.dev.brain2.models;
 
 import android.net.Uri;
 import java.io.Serializable;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.UUID;
 
 // Esta clase representa una imagen en la aplicación
@@ -11,6 +13,9 @@ public class Image implements Serializable {
     private transient Uri uri;      // URI que indica dónde está guardada la imagen (transient porque Uri no es serializable)
     private String name;            // Nombre de la imagen
     private String uriString;       // Guardamos la URI como String para poder serializar
+
+    // Nuevo atributo para las etiquetas de la imagen
+    private List<String> tags;      // Lista de etiquetas asociadas a la imagen
 
     // Constructor: crea una nueva imagen con una URI y un nombre
     public Image(Uri uri, String name) {
@@ -28,6 +33,7 @@ public class Image implements Serializable {
         this.uri = uri;
         this.name = name;
         this.uriString = uri.toString();         // Guardamos la URI como String
+        this.tags = new ArrayList<>();           // Inicializamos la lista de etiquetas
     }
 
     // GETTERS Y SETTERS
@@ -74,7 +80,19 @@ public class Image implements Serializable {
         this.name = name;
     }
 
-    // Este método se llama automáticamente al deserializar la imagen
+    // Obtiene las etiquetas asociadas a la imagen
+    public List<String> getTags() {
+        return tags;
+    }
+
+    // Añade una etiqueta a la imagen
+    public void addTag(String tag) {
+        if (tag != null && !tag.trim().isEmpty()) {
+            this.tags.add(tag);
+        }
+    }
+
+    // Este metodo se llama automáticamente al deserializar la imagen
     private Object readResolve() {
         // Reconstruimos la URI desde el String guardado
         if (uriString != null) {

@@ -15,6 +15,8 @@ import com.dev.brain2.models.Folder;
 import com.dev.brain2.utils.Notifier;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import java.util.List;
+import android.widget.Button;
+import com.dev.brain2.activities.ImageGalleryActivity;
 
 public class MainActivity extends AppCompatActivity implements OnFolderClickListener {
 
@@ -28,6 +30,8 @@ public class MainActivity extends AppCompatActivity implements OnFolderClickList
     private FolderGridManager folderGridManager;
     private FolderAdapter folderAdapter;
     private List<Folder> folderList;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,6 +80,11 @@ public class MainActivity extends AppCompatActivity implements OnFolderClickList
                 return true;
             } else if (itemId == R.id.nav_home) {
                 loadFolders();
+                return true;
+            } else if (itemId == R.id.nav_search) { // Identificador del ícono de lupa
+                // Abre la ImageGalleryActivity al hacer clic en el ícono de búsqueda
+                Intent intent = new Intent(this, ImageGalleryActivity.class);
+                startActivity(intent);
                 return true;
             }
             return false;

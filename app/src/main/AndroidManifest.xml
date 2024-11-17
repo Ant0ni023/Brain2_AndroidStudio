@@ -1,4 +1,6 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+<manifest xmlns:tools="http://schemas.android.com/tools"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    tools:ignore="ExtraText">
     package="com.dev.brain2">
 
     <!-- Permisos necesarios -->
@@ -43,5 +45,7 @@
         <activity android:name=".activities.FolderContentActivity" />
         <activity android:name=".activities.ImagePickerActivity" />
         <activity android:name=".activities.ImageViewerActivity" />
+        <activity android:name=".activities.ImageGalleryActivity" />
+
     </application>
 </manifest>

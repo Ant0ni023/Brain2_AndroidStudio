@@ -9,6 +9,7 @@
     <color name="imagePickerTextColor">#000000</color>
     <color name="imagePickerButtonColor">#1E90FF</color>
     <color name="navigation_item_pressed_color">#000000</color> <!-- Color igual al normal -->
+    <color name="gray">#808080</color>
 
     <!-- Nuevos colores para las carpetas -->
     <color name="folder_card_background">@color/white</color>
