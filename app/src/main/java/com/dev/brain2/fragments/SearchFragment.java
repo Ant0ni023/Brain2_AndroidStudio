@@ -70,7 +70,6 @@ public class SearchFragment extends Fragment implements Searchable, OnImageClick
      */
     private void setupSearchEditText() {
         binding.searchEditText.addTextChangedListener(new TextWatcher() {
-            // Métodos no utilizados
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
             // Realiza la búsqueda cuando cambia el texto
