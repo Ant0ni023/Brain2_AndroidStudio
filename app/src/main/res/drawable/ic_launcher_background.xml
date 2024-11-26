@@ -5,12 +5,12 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- Fondo de color sólido -->
+
     <path
         android:fillColor="#3DDC84"
         android:pathData="M0,0h108v108h-108z" />
 
-    <!-- Líneas verticales -->
+
     <path android:fillColor="#00000000" android:pathData="M9,0L9,108" android:strokeWidth="0.8" android:strokeColor="#33FFFFFF" />
     <path android:fillColor="#00000000" android:pathData="M19,0L19,108" android:strokeWidth="0.8" android:strokeColor="#33FFFFFF" />
     <path android:fillColor="#00000000" android:pathData="M29,0L29,108" android:strokeWidth="0.8" android:strokeColor="#33FFFFFF" />
@@ -22,7 +22,7 @@
     <path android:fillColor="#00000000" android:pathData="M89,0L89,108" android:strokeWidth="0.8" android:strokeColor="#33FFFFFF" />
     <path android:fillColor="#00000000" android:pathData="M99,0L99,108" android:strokeWidth="0.8" android:strokeColor="#33FFFFFF" />
 
-    <!-- Líneas horizontales -->
+
     <path android:fillColor="#00000000" android:pathData="M0,9L108,9" android:strokeWidth="0.8" android:strokeColor="#33FFFFFF" />
     <path android:fillColor="#00000000" android:pathData="M0,19L108,19" android:strokeWidth="0.8" android:strokeColor="#33FFFFFF" />
     <path android:fillColor="#00000000" android:pathData="M0,29L108,29" android:strokeWidth="0.8" android:strokeColor="#33FFFFFF" />
@@ -34,7 +34,7 @@
     <path android:fillColor="#00000000" android:pathData="M0,89L108,89" android:strokeWidth="0.8" android:strokeColor="#33FFFFFF" />
     <path android:fillColor="#00000000" android:pathData="M0,99L108,99" android:strokeWidth="0.8" android:strokeColor="#33FFFFFF" />
 
-    <!-- Rectángulo central -->
+
     <path android:fillColor="#00000000" android:pathData="M19,29L89,29" android:strokeWidth="0.8" android:strokeColor="#33FFFFFF" />
     <path android:fillColor="#00000000" android:pathData="M19,39L89,39" android:strokeWidth="0.8" android:strokeColor="#33FFFFFF" />
     <path android:fillColor="#00000000" android:pathData="M19,49L89,49" android:strokeWidth="0.8" android:strokeColor="#33FFFFFF" />

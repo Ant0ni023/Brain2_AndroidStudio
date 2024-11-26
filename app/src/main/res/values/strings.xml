@@ -15,4 +15,5 @@
     <string name="error_saving_image">Error al guardar la imagen</string>
     <string name="folder_name_empty">El nombre de la carpeta no puede estar vacío</string>
     <string name="image_count">%1$d imágenes</string>
+    <string name="title_activity_dashboard">DashboardActivity</string>
 </resources>

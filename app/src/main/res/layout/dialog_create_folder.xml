@@ -15,7 +15,6 @@
         android:importantForAutofill="no"
         android:minHeight="48dp"/>
 
-    <!-- Spinner para seleccionar el color de la carpeta -->
     <Spinner
         android:id="@+id/colorSpinner"
         android:layout_width="match_parent"

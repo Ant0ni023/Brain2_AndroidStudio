@@ -1,155 +1,102 @@
 package com.dev.brain2;
 
-import android.Manifest;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.os.Build;
+import static com.dev.brain2.fragments.SettingsFragment.KEY_BAR_COLOR;
+import static com.dev.brain2.fragments.SettingsFragment.KEY_ICON_COLOR;
+
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
-import android.view.WindowInsets;
-import android.widget.Toast;
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+
+import com.dev.brain2.utils.ColorManager;
+import com.dev.brain2.utils.SettingsPrefHelper;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
-import android.graphics.Insets;
 
-public class MainActivity extends AppCompatActivity implements FolderAdapter.OnFolderClickListener {
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
+import androidx.navigation.ui.AppBarConfiguration;
+import androidx.navigation.ui.NavigationUI;
 
-    private static final int REQUEST_CODE_MEDIA_PERMISSION = 101;
+import com.dev.brain2.databinding.ActivityDashboardBinding;
 
-    private FolderManager folderManager;
-    private FolderAdapter folderAdapter;
-    private RecyclerView recyclerView;
-    private BottomNavigationView bottomNavigationView;
+/**
+ * Actividad principal que maneja la navegación y configuración global de la aplicación.
+ */
+public class MainActivity extends AppCompatActivity {
+    private AppBarConfiguration appBarConfiguration;
+    private ActivityDashboardBinding binding;
+    SettingsPrefHelper settingsPrefHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
 
-        folderManager = new FolderManager(this);
-        setupRecyclerView();
-        setupBottomNavigationView();
+        binding = ActivityDashboardBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
-        // Solicita permisos de almacenamiento dependiendo de la versión de Android
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            requestMediaPermissions();
-        } else {
-            requestLegacyStoragePermission();
-        }
+        BottomNavigationView navView = findViewById(R.id.nav_view);
+        settingsPrefHelper = new SettingsPrefHelper(this);
 
-        // Ajuste de padding para Android API 30 o superior
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            findViewById(R.id.main).setOnApplyWindowInsetsListener((v, insets) -> {
-                Insets systemBarsInsets = insets.getInsets(WindowInsets.Type.systemBars());
-                v.setPadding(systemBarsInsets.left, systemBarsInsets.top, systemBarsInsets.right, systemBarsInsets.bottom);
-                return WindowInsets.CONSUMED;
-            });
-        }
-    }
+        // Establecer valores predeterminados
+        int defaultBarColorPosition = 0; // Negro
+        int defaultIconColorPosition = 0; // Blanco
 
-    private void setupRecyclerView() {
-        recyclerView = findViewById(R.id.foldersRecyclerView);
-        folderAdapter = new FolderAdapter(this, this);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recyclerView.setAdapter(folderAdapter);
-    }
+        // Obtener los colores guardados o usar los predeterminados
+        int barColorPosition = settingsPrefHelper.getInt(KEY_BAR_COLOR, defaultBarColorPosition);
+        int iconColorPosition = settingsPrefHelper.getInt(KEY_ICON_COLOR, defaultIconColorPosition);
 
-    private void setupBottomNavigationView() {
-        bottomNavigationView = findViewById(R.id.bottom_navigation);
-        bottomNavigationView.setSelectedItemId(R.id.nav_home);
-        bottomNavigationView.setOnItemSelectedListener(item -> {
-            int itemId = item.getItemId();
-            if (itemId == R.id.nav_home) {
-                return true;
-            } else if (itemId == R.id.nav_search) {
-                Toast.makeText(this, "Buscar", Toast.LENGTH_SHORT).show();
-                return true;
-            } else if (itemId == R.id.nav_add_photo) {
-                Intent intent = new Intent(this, ImagePickerActivity.class);
-                startActivity(intent);
-                return true;
-            } else if (itemId == R.id.nav_settings) {
-                Toast.makeText(this, "Configuración", Toast.LENGTH_SHORT).show();
-                return true;
-            }
-            return false;
-        });
-    }
+        // Aplicar los colores
+        changeBottomNavigationIconColor(ColorManager.getIconColorByIndex(iconColorPosition));
+        changeSystemBarsColor(ColorManager.getBarColorByIndex(barColorPosition));
 
-    private void requestLegacyStoragePermission() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, REQUEST_CODE_MEDIA_PERMISSION);
-        }
-    }
-
-    private void requestMediaPermissions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this,
-                        new String[]{
-                                Manifest.permission.READ_MEDIA_IMAGES,
-                                Manifest.permission.READ_MEDIA_VIDEO,
-                                Manifest.permission.READ_MEDIA_AUDIO
-                        },
-                        REQUEST_CODE_MEDIA_PERMISSION);
-            }
-        }
-    }
-
-    private void loadFolders() {
-        if (folderManager != null) {
-            folderAdapter.updateFolders(folderManager.getFolders());
-        }
+        appBarConfiguration = new AppBarConfiguration.Builder(
+                R.id.nav_home, R.id.nav_search, R.id.nav_add_photo, R.id.nav_settings)
+                .build();
+        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_activity_dashboard);
+        NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
+        NavigationUI.setupWithNavController(binding.navView, navController);
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        loadFolders();
+    public boolean onSupportNavigateUp() {
+        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_activity_dashboard);
+        return NavigationUI.navigateUp(navController, appBarConfiguration)
+                || super.onSupportNavigateUp();
     }
 
-    @Override
-    public void onFolderClick(Folder folder) {
-        Intent intent = new Intent(this, FolderContentActivity.class);
-        intent.putExtra("folder", folder);
-        startActivity(intent);
-    }
-
-    @Override
-    public void onFolderEdit(Folder folder, int position) {
-        folderManager.updateFolder(folder);
-        folderAdapter.notifyItemChanged(position);
-        Toast.makeText(this, "Carpeta actualizada: " + folder.getName(), Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void onFolderDelete(Folder folder) {
-        folderManager.deleteFolder(folder); // Llama a deleteFolder en FolderManager
-        loadFolders(); // Recarga las carpetas en la interfaz después de eliminar
-        Toast.makeText(this, "Carpeta eliminada: " + folder.getName(), Toast.LENGTH_SHORT).show();
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == REQUEST_CODE_MEDIA_PERMISSION) {
-            boolean allGranted = true;
-            for (int result : grantResults) {
-                if (result != PackageManager.PERMISSION_GRANTED) {
-                    allGranted = false;
-                    break;
-                }
-            }
-
-            if (!allGranted) {
-                Toast.makeText(this, "Se necesitan permisos para acceder a los archivos multimedia", Toast.LENGTH_SHORT).show();
-            }
+    /**
+     * Cambia el color de las barras de sistema (barra de estado y navegación).
+     *
+     * @param colorHex Código hexadecimal del color a aplicar.
+     */
+    public void changeSystemBarsColor(String colorHex) {
+        // Parsear el color desde la cadena hexadecimal
+        int color = ContextCompat.getColor(this, android.R.color.transparent);
+        try {
+            color = android.graphics.Color.parseColor(colorHex);
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
         }
+
+        // Cambiar el color de la barra de estado y navegación
+        if (getWindow() != null) {
+            getWindow().setStatusBarColor(color);
+            getWindow().setNavigationBarColor(color);
+        }
+        binding.navView.setBackgroundTintList(android.content.res.ColorStateList.valueOf(color));
+
+        getSupportActionBar().setBackgroundDrawable(new ColorDrawable(color));
+    }
+
+    /**
+     * Cambia el color de los iconos y texto en la barra de navegación inferior.
+     *
+     * @param colorHex Código hexadecimal del color a aplicar.
+     */
+    public void changeBottomNavigationIconColor(String colorHex) {
+        int color = Color.parseColor(colorHex);
+        binding.navView.setItemIconTintList(android.content.res.ColorStateList.valueOf(color));
+        binding.navView.setItemTextColor(android.content.res.ColorStateList.valueOf(color));
     }
 }

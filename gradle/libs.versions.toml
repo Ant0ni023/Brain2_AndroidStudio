@@ -1,23 +1,42 @@
 [versions]
-agp = "8.5.0"
+agp = "8.2.1"
 junit = "4.13.2"
-junitVersion = "1.1.5"
+extJunit = "1.1.5"
 espressoCore = "3.5.1"
 appcompat = "1.6.1"
 material = "1.10.0"
 activity = "1.8.0"
 constraintlayout = "2.1.4"
-gson = "2.10.1"  # Agregamos la versión de Gson
+gson = "2.10.1"
+recyclerview = "1.2.1"
+mockito = "5.4.0"
+robolectric = "4.10.3"
+testRunner = "1.6.2"
+testRules = "1.6.1"
+lifecycle-livedata-ktx = "2.8.7"
+lifecycle-viewmodel-ktx = "2.8.7"
+navigation-fragment = "2.8.4"
+navigation-ui = "2.8.4"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
-ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
+extJunit = { group = "androidx.test.ext", name = "junit", version.ref = "extJunit" }
+espressoCore = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
 constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
-gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }  # Agregamos la dependencia de Gson
+gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
+recyclerview = { group = "androidx.recyclerview", name = "recyclerview", version.ref = "recyclerview" }
+mockitoCore = { group = "org.mockito", name = "mockito-core", version.ref = "mockito" }
+mockitoAndroid = { group = "org.mockito", name = "mockito-android", version.ref = "mockito" }
+robolectric = { group = "org.robolectric", name = "robolectric", version.ref = "robolectric" }
+testRunner = { group = "androidx.test", name = "runner", version.ref = "testRunner" }
+testRules = { group = "androidx.test", name = "rules", version.ref = "testRules" }
+lifecycle-livedata-ktx = { group = "androidx.lifecycle", name = "lifecycle-livedata-ktx", version.ref = "lifecycle-livedata-ktx" }
+lifecycle-viewmodel-ktx = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-ktx", version.ref = "lifecycle-viewmodel-ktx" }
+navigation-fragment = { group = "androidx.navigation", name = "navigation-fragment", version.ref = "navigation-fragment" }
+navigation-ui = { group = "androidx.navigation", name = "navigation-ui", version.ref = "navigation-ui" }
 
 [plugins]
-android-application = { id = "com.android.application", version.ref = "agp" }
+androidApplication = { id = "com.android.application", version.ref = "agp" }
