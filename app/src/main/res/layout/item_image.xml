@@ -13,7 +13,6 @@
         android:scaleType="centerCrop"
         android:contentDescription="Imagen de la galería" />
 
-    <!-- TextView para el nombre de la imagen, centrado debajo de la imagen -->
     <TextView
         android:id="@+id/imageName"
         android:layout_width="match_parent"

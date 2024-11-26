@@ -1,6 +1,13 @@
-// Ruta: java/com/dev/brain2/interfaces/Searchable.java
 package com.dev.brain2.interfaces;
 
+/**
+ * Interfaz que define el método de búsqueda.
+ */
 public interface Searchable {
-    void onSearch(String query); // Metodo para realizar la búsqueda
+    /**
+     * Método para realizar la búsqueda.
+     *
+     * @param query Consulta de búsqueda.
+     */
+    void onSearch(String query);
 }

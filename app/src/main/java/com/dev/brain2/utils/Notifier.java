@@ -4,14 +4,18 @@ import android.content.Context;
 import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 
-// Esta clase proporciona métodos estáticos para mostrar diferentes tipos de notificaciones
-// al usuario de manera consistente en toda la aplicación
+/**
+ * Esta clase proporciona métodos estáticos para mostrar diferentes tipos de notificaciones
+ * al usuario de manera consistente en toda la aplicación.
+ */
 public class Notifier {
 
-    // Muestra un mensaje de error al usuario usando un Toast
-    // Parámetros:
-    //   context: contexto de la aplicación necesario para mostrar el Toast
-    //   message: mensaje de error a mostrar
+    /**
+     * Muestra un mensaje de error al usuario usando un Toast.
+     *
+     * @param context Contexto de la aplicación necesario para mostrar el Toast.
+     * @param message Mensaje de error a mostrar.
+     */
     public static void showError(Context context, String message) {
         Toast.makeText(
                 context,                 // Contexto necesario para el Toast
@@ -20,10 +24,12 @@ public class Notifier {
         ).show();
     }
 
-    // Muestra un mensaje informativo al usuario usando un Toast
-    // Parámetros:
-    //   context: contexto de la aplicación necesario para mostrar el Toast
-    //   message: mensaje informativo a mostrar
+    /**
+     * Muestra un mensaje informativo al usuario usando un Toast.
+     *
+     * @param context Contexto de la aplicación necesario para mostrar el Toast.
+     * @param message Mensaje informativo a mostrar.
+     */
     public static void showInfo(Context context, String message) {
         Toast.makeText(
                 context,                 // Contexto necesario para el Toast
@@ -32,12 +38,14 @@ public class Notifier {
         ).show();
     }
 
-    // Muestra un diálogo de confirmación para eliminar elementos
-    // Este diálogo muestra dos botones: Eliminar y Cancelar
-    // Parámetros:
-    //   context: contexto de la aplicación necesario para mostrar el diálogo
-    //   message: mensaje de confirmación a mostrar
-    //   onConfirm: acción a ejecutar si el usuario confirma la eliminación
+    /**
+     * Muestra un diálogo de confirmación para eliminar elementos.
+     * Este diálogo muestra dos botones: Eliminar y Cancelar.
+     *
+     * @param context   Contexto de la aplicación necesario para mostrar el diálogo.
+     * @param message   Mensaje de confirmación a mostrar.
+     * @param onConfirm Acción a ejecutar si el usuario confirma la eliminación.
+     */
     public static void showDeleteConfirmation(Context context,
                                               String message,
                                               Runnable onConfirm) {

@@ -3,17 +3,17 @@
     <item
         android:id="@+id/nav_home"
         android:icon="@drawable/ic_home"
-        android:title="Inicio" />
+        android:title="@string/nav_home" />
     <item
         android:id="@+id/nav_search"
         android:icon="@drawable/ic_search"
-        android:title="Buscar" />
+        android:title="@string/nav_search" />
     <item
         android:id="@+id/nav_add_photo"
         android:icon="@drawable/ic_add_photo"
-        android:title="Agregar" />
+        android:title="@string/nav_add_photo" />
     <item
         android:id="@+id/nav_settings"
         android:icon="@drawable/ic_settings"
-        android:title="Configuración" />
+        android:title="@string/nav_settings" />
 </menu>

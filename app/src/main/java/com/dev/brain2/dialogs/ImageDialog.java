@@ -13,26 +13,41 @@ import com.dev.brain2.models.Image;
 import com.dev.brain2.utils.Notifier;
 import java.util.List;
 
-// Esta clase maneja todos los diálogos relacionados con las imágenes
+/**
+ * Esta clase maneja todos los diálogos relacionados con las imágenes.
+ */
 public class ImageDialog {
     // Variables necesarias para gestionar los diálogos
     private final Context context;
     private final ImageManager imageManager;
     private final FolderManager folderManager;
 
-    // Constructor
+    /**
+     * Constructor.
+     *
+     * @param context       Contexto de la aplicación.
+     * @param imageManager  Manager para manejar las imágenes.
+     * @param folderManager Manager para manejar las carpetas.
+     */
     public ImageDialog(Context context, ImageManager imageManager, FolderManager folderManager) {
         this.context = context;
         this.imageManager = imageManager;
         this.folderManager = folderManager;
     }
 
-    // Interfaz para notificar cuando se selecciona un nombre para la imagen
+    /**
+     * Interfaz para notificar cuando se selecciona un nombre para la imagen.
+     */
     public interface ImageNameListener {
         void onNameSelected(String name);
     }
 
-    // Muestra el diálogo para seleccionar el origen de una imagen
+    /**
+     * Muestra el diálogo para seleccionar el origen de una imagen.
+     *
+     * @param galleryCallback Callback si se elige la galería.
+     * @param cameraCallback  Callback si se elige la cámara.
+     */
     public void showSourceDialog(Runnable galleryCallback, Runnable cameraCallback) {
         // Definimos las opciones disponibles
         String[] options = {"Galería", "Cámara"};
@@ -48,7 +63,13 @@ public class ImageDialog {
                 .show();
     }
 
-    // Muestra el diálogo para mover una imagen a otra carpeta
+    /**
+     * Muestra el diálogo para mover una imagen a otra carpeta.
+     *
+     * @param currentFolder Carpeta actual de la imagen.
+     * @param image         Imagen a mover.
+     * @param onMoveComplete Callback al completar el movimiento.
+     */
     public void showMoveDialog(Folder currentFolder, Image image, Runnable onMoveComplete) {
         // Obtenemos las carpetas disponibles (excluyendo la actual)
         List<Folder> availableFolders = folderManager.getAvailableFolders(currentFolder);
@@ -82,7 +103,13 @@ public class ImageDialog {
                 .show();
     }
 
-    // Muestra el diálogo para renombrar una imagen
+    /**
+     * Muestra el diálogo para renombrar una imagen.
+     *
+     * @param folder           Carpeta donde está la imagen.
+     * @param image            Imagen a renombrar.
+     * @param onRenameComplete Callback al completar el renombrado.
+     */
     public void showRenameDialog(Folder folder, Image image, Runnable onRenameComplete) {
         // Creamos la vista del diálogo
         View dialogView = LayoutInflater.from(context)
@@ -111,7 +138,11 @@ public class ImageDialog {
                 .show();
     }
 
-    // Muestra el diálogo para poner nombre a una nueva imagen
+    /**
+     * Muestra el diálogo para poner nombre a una nueva imagen.
+     *
+     * @param listener Listener que recibe el nombre seleccionado.
+     */
     public void showImageNameDialog(ImageNameListener listener) {
         // Creamos la vista del diálogo
         View dialogView = LayoutInflater.from(context)

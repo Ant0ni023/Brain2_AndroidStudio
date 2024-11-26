@@ -5,8 +5,10 @@ import android.view.View;
 import androidx.recyclerview.widget.RecyclerView;
 import com.dev.brain2.utils.GridCalculator;
 
-// Este LayoutManager organiza las carpetas en una cuadrícula de 2 columnas
-// y permite desplazarse verticalmente para ver todas las carpetas
+/**
+ * LayoutManager que organiza las carpetas en una cuadrícula de 2 columnas
+ * y permite desplazarse verticalmente para ver todas las carpetas.
+ */
 public class FolderGridManager extends RecyclerView.LayoutManager {
 
     // Clase auxiliar para cálculos
@@ -15,6 +17,11 @@ public class FolderGridManager extends RecyclerView.LayoutManager {
     // Valor actual del scroll vertical
     private int currentScrollY = 0;
 
+    /**
+     * Constructor que inicializa el GridCalculator.
+     *
+     * @param context Contexto de la aplicación.
+     */
     public FolderGridManager(Context context) {
         gridCalculator = new GridCalculator(context);
     }
@@ -84,7 +91,11 @@ public class FolderGridManager extends RecyclerView.LayoutManager {
         return scrolled;
     }
 
-    // Obtiene el espacio disponible para el contenido
+    /**
+     * Obtiene el espacio disponible para el contenido.
+     *
+     * @return Espacio vertical disponible.
+     */
     private int getAvailableSpace() {
         return getHeight() - getPaddingTop() - getPaddingBottom();
     }

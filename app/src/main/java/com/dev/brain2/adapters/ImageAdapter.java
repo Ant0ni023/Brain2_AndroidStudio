@@ -14,7 +14,9 @@ import com.dev.brain2.models.Image;
 import com.dev.brain2.interfaces.OnImageClickListener;
 import java.util.List;
 
-// Adaptador para mostrar la lista de imágenes en un RecyclerView
+/**
+ * Adaptador para mostrar la lista de imágenes en un RecyclerView.
+ */
 public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHolder> {
 
     // Variables para mantener los datos y el contexto
@@ -22,14 +24,26 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
     private Context context;              // Contexto de la aplicación
     private OnImageClickListener listener; // Listener para eventos de clic
 
-    // Constructor del adaptador
+    /**
+     * Constructor del adaptador.
+     *
+     * @param context  Contexto de la aplicación.
+     * @param images   Lista de imágenes a mostrar.
+     * @param listener Listener para manejar eventos de clic en las imágenes.
+     */
     public ImageAdapter(Context context, List<Image> images, OnImageClickListener listener) {
         this.context = context;
         this.images = images;
         this.listener = listener;
     }
 
-    // Crea nuevas vistas para los elementos de la lista
+    /**
+     * Crea nuevas vistas para los elementos de la lista.
+     *
+     * @param parent   El ViewGroup padre.
+     * @param viewType Tipo de vista (no usado aquí).
+     * @return Un nuevo ImageViewHolder.
+     */
     @NonNull
     @Override
     public ImageViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -38,7 +52,12 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
         return new ImageViewHolder(view);
     }
 
-    // Actualiza el contenido de una vista existente
+    /**
+     * Vincula los datos a la vista en la posición especificada.
+     *
+     * @param holder   El ImageViewHolder que debe ser actualizado.
+     * @param position La posición del elemento en la lista.
+     */
     @Override
     public void onBindViewHolder(@NonNull ImageViewHolder holder, int position) {
         // Obtenemos la imagen en la posición actual y la vinculamos al ViewHolder
@@ -46,19 +65,29 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
         holder.bind(image);
     }
 
-    // Devuelve el número total de elementos en la lista
+    /**
+     * Devuelve el número total de elementos en la lista.
+     *
+     * @return Número de imágenes en la lista.
+     */
     @Override
     public int getItemCount() {
         return images.size();
     }
 
-    // ViewHolder que contiene la vista de cada elemento de la lista
+    /**
+     * ViewHolder que contiene la vista de cada elemento de la lista.
+     */
     public class ImageViewHolder extends RecyclerView.ViewHolder {
         // Vistas dentro del elemento
         private ImageView imageView;  // Vista para mostrar la imagen
         private TextView imageName;   // Nombre de la imagen
 
-        // Constructor del ViewHolder
+        /**
+         * Constructor del ViewHolder.
+         *
+         * @param itemView La vista del elemento.
+         */
         public ImageViewHolder(@NonNull View itemView) {
             super(itemView);
 
@@ -84,7 +113,11 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
             });
         }
 
-        // Vincula los datos de una imagen con las vistas
+        /**
+         * Vincula los datos de una imagen con las vistas.
+         *
+         * @param image La imagen cuyos datos se mostrarán.
+         */
         public void bind(Image image) {
             // Cargamos la imagen en el ImageView
             Uri imageUri = image.getUri();
@@ -95,7 +128,11 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
         }
     }
 
-    // Método para actualizar la lista de imágenes
+    /**
+     * Método para actualizar la lista de imágenes.
+     *
+     * @param newImages Nueva lista de imágenes.
+     */
     public void updateImages(List<Image> newImages) {
         this.images = newImages;
         notifyDataSetChanged();  // Notificamos al RecyclerView que los datos han cambiado

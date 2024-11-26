@@ -7,7 +7,6 @@
     android:gravity="center"
     android:padding="8dp">
 
-    <!-- Ícono de la carpeta -->
     <ImageView
         android:id="@+id/folderIcon"
         android:layout_width="64dp"
@@ -15,7 +14,6 @@
         android:src="@drawable/ic_folder"
         android:tint="@color/black" />
 
-    <!-- Nombre de la carpeta -->
     <TextView
         android:id="@+id/folderName"
         android:layout_width="wrap_content"
@@ -25,7 +23,6 @@
         android:textColor="@color/navigation_text_color"
         android:layout_marginTop="8dp" />
 
-    <!-- Cantidad de imágenes (opcional) -->
     <TextView
         android:id="@+id/imageCount"
         android:layout_width="wrap_content"

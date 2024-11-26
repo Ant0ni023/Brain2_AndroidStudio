@@ -12,20 +12,33 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-
-// Esta clase se encarga de gestionar las imágenes de la aplicación
+/**
+ * Esta clase se encarga de gestionar las imágenes de la aplicación.
+ */
 public class ImageManager {
     // Variables necesarias para gestionar las imágenes
     private Context context;
     private FolderManager folderManager;
 
-    // Constructor
+    /**
+     * Constructor.
+     *
+     * @param context       Contexto de la aplicación.
+     * @param folderManager Manager de carpetas.
+     */
     public ImageManager(Context context, FolderManager folderManager) {
         this.context = context;
         this.folderManager = folderManager;
     }
 
-    // Guarda una nueva imagen en una carpeta
+    /**
+     * Guarda una nueva imagen en una carpeta.
+     *
+     * @param imageUri  URI de la imagen.
+     * @param imageName Nombre de la imagen.
+     * @param folder    Carpeta donde se guardará.
+     * @throws IOException Si ocurre un error al guardar la imagen.
+     */
     public void saveImage(Uri imageUri, String imageName, Folder folder) throws IOException {
         // Creamos la carpeta si no existe
         File folderDir = folderManager.createFolderOnDisk(folder.getName());
@@ -61,7 +74,14 @@ public class ImageManager {
         }
     }
 
-    // Mueve una imagen de una carpeta a otra
+    /**
+     * Mueve una imagen de una carpeta a otra.
+     *
+     * @param image        Imagen a mover.
+     * @param sourceFolder Carpeta origen.
+     * @param targetFolder Carpeta destino.
+     * @return Verdadero si se movió exitosamente, falso de lo contrario.
+     */
     public boolean moveImage(Image image, Folder sourceFolder, Folder targetFolder) {
         // Obtenemos los archivos de origen y destino
         File sourceFile = new File(image.getUri().getPath());
@@ -85,7 +105,13 @@ public class ImageManager {
         return false;
     }
 
-    // Elimina una imagen de una carpeta
+    /**
+     * Elimina una imagen de una carpeta.
+     *
+     * @param image  Imagen a eliminar.
+     * @param folder Carpeta donde se encuentra la imagen.
+     * @return Verdadero si se eliminó exitosamente, falso de lo contrario.
+     */
     public boolean deleteImage(Image image, Folder folder) {
         File imageFile = new File(image.getUri().getPath());
 
@@ -101,7 +127,14 @@ public class ImageManager {
         return false;
     }
 
-    // Renombra una imagen
+    /**
+     * Renombra una imagen.
+     *
+     * @param image   Imagen a renombrar.
+     * @param newName Nuevo nombre.
+     * @param folder  Carpeta donde se encuentra la imagen.
+     * @return Verdadero si se renombró exitosamente, falso de lo contrario.
+     */
     public boolean renameImage(Image image, String newName, Folder folder) {
         // Obtenemos los archivos viejo y nuevo
         File imageFile = new File(image.getUri().getPath());
@@ -118,6 +151,11 @@ public class ImageManager {
         return false;
     }
 
+    /**
+     * Obtiene todas las imágenes de todas las carpetas.
+     *
+     * @return Lista de todas las imágenes.
+     */
     public List<Image> getAllImages() {
         List<Image> allImages = new ArrayList<>();
 

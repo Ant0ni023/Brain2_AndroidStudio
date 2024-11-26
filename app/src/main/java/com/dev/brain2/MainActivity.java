@@ -1,132 +1,102 @@
 package com.dev.brain2;
 
-import android.content.Intent;
+import static com.dev.brain2.fragments.SettingsFragment.KEY_BAR_COLOR;
+import static com.dev.brain2.fragments.SettingsFragment.KEY_ICON_COLOR;
+
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.recyclerview.widget.RecyclerView;
-import com.dev.brain2.activities.FolderContentActivity;
-import com.dev.brain2.activities.ImagePickerActivity;
-import com.dev.brain2.adapters.FolderAdapter;
-import com.dev.brain2.interfaces.OnFolderClickListener;
-import com.dev.brain2.managers.DialogManager;
-import com.dev.brain2.managers.FolderManager;
-import com.dev.brain2.managers.FolderGridManager;
-import com.dev.brain2.models.Folder;
-import com.dev.brain2.utils.Notifier;
+
+import com.dev.brain2.utils.ColorManager;
+import com.dev.brain2.utils.SettingsPrefHelper;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
-import java.util.List;
-import android.widget.Button;
-import com.dev.brain2.activities.ImageGalleryActivity;
 
-public class MainActivity extends AppCompatActivity implements OnFolderClickListener {
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+import androidx.navigation.NavController;
+import androidx.navigation.Navigation;
+import androidx.navigation.ui.AppBarConfiguration;
+import androidx.navigation.ui.NavigationUI;
 
-    // Componentes de la UI
-    private RecyclerView recyclerView;
-    private BottomNavigationView bottomNavigationView;
+import com.dev.brain2.databinding.ActivityDashboardBinding;
 
-    // Gestores y adaptadores
-    private FolderManager folderManager;
-    private DialogManager dialogManager;
-    private FolderGridManager folderGridManager;
-    private FolderAdapter folderAdapter;
-    private List<Folder> folderList;
-
-
+/**
+ * Actividad principal que maneja la navegación y configuración global de la aplicación.
+ */
+public class MainActivity extends AppCompatActivity {
+    private AppBarConfiguration appBarConfiguration;
+    private ActivityDashboardBinding binding;
+    SettingsPrefHelper settingsPrefHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
 
-        // Inicializamos los gestores
-        folderManager = new FolderManager(this);
-        dialogManager = new DialogManager(this, folderManager, null);
+        binding = ActivityDashboardBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
 
-        // Inicializamos las vistas
-        recyclerView = findViewById(R.id.foldersRecyclerView);
-        bottomNavigationView = findViewById(R.id.bottom_navigation);
+        BottomNavigationView navView = findViewById(R.id.nav_view);
+        settingsPrefHelper = new SettingsPrefHelper(this);
 
-        // Configuramos la interfaz
-        setupRecyclerView();
-        setupBottomNavigationView();
-        loadFolders();
-    }
+        // Establecer valores predeterminados
+        int defaultBarColorPosition = 0; // Negro
+        int defaultIconColorPosition = 0; // Blanco
 
-    private void setupRecyclerView() {
-        // Configuramos el administrador de cuadrícula personalizado
-        folderGridManager = new FolderGridManager(this);
-        recyclerView.setLayoutManager(folderGridManager);
+        // Obtener los colores guardados o usar los predeterminados
+        int barColorPosition = settingsPrefHelper.getInt(KEY_BAR_COLOR, defaultBarColorPosition);
+        int iconColorPosition = settingsPrefHelper.getInt(KEY_ICON_COLOR, defaultIconColorPosition);
 
-        // Configuramos el adaptador
-        folderAdapter = new FolderAdapter(this, folderList, this);
-        recyclerView.setAdapter(folderAdapter);
+        // Aplicar los colores
+        changeBottomNavigationIconColor(ColorManager.getIconColorByIndex(iconColorPosition));
+        changeSystemBarsColor(ColorManager.getBarColorByIndex(barColorPosition));
 
-        // Agregamos padding para el scroll
-        int bottomPadding = getResources().getDimensionPixelSize(R.dimen.nav_bar_height);
-        recyclerView.setPadding(0, 0, 0, bottomPadding);
-        recyclerView.setClipToPadding(false);
-    }
-
-    private void loadFolders() {
-        folderList = folderManager.getFolders();
-        folderAdapter.updateFolders(folderList);
-    }
-
-    private void setupBottomNavigationView() {
-        bottomNavigationView.setOnItemSelectedListener(item -> {
-            int itemId = item.getItemId();
-            if (itemId == R.id.nav_add_photo) {
-                startActivity(new Intent(this, ImagePickerActivity.class));
-                return true;
-            } else if (itemId == R.id.nav_home) {
-                loadFolders();
-                return true;
-            } else if (itemId == R.id.nav_search) { // Identificador del ícono de lupa
-                // Abre la ImageGalleryActivity al hacer clic en el ícono de búsqueda
-                Intent intent = new Intent(this, ImageGalleryActivity.class);
-                startActivity(intent);
-                return true;
-            }
-            return false;
-        });
+        appBarConfiguration = new AppBarConfiguration.Builder(
+                R.id.nav_home, R.id.nav_search, R.id.nav_add_photo, R.id.nav_settings)
+                .build();
+        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_activity_dashboard);
+        NavigationUI.setupActionBarWithNavController(this, navController, appBarConfiguration);
+        NavigationUI.setupWithNavController(binding.navView, navController);
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        loadFolders();
+    public boolean onSupportNavigateUp() {
+        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_activity_dashboard);
+        return NavigationUI.navigateUp(navController, appBarConfiguration)
+                || super.onSupportNavigateUp();
     }
 
-    @Override
-    public void onFolderClick(Folder folder) {
-        // Abrimos el contenido de la carpeta
-        Intent intent = new Intent(this, FolderContentActivity.class);
-        intent.putExtra("folderId", folder.getId());
-        startActivity(intent);
+    /**
+     * Cambia el color de las barras de sistema (barra de estado y navegación).
+     *
+     * @param colorHex Código hexadecimal del color a aplicar.
+     */
+    public void changeSystemBarsColor(String colorHex) {
+        // Parsear el color desde la cadena hexadecimal
+        int color = ContextCompat.getColor(this, android.R.color.transparent);
+        try {
+            color = android.graphics.Color.parseColor(colorHex);
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+        }
+
+        // Cambiar el color de la barra de estado y navegación
+        if (getWindow() != null) {
+            getWindow().setStatusBarColor(color);
+            getWindow().setNavigationBarColor(color);
+        }
+        binding.navView.setBackgroundTintList(android.content.res.ColorStateList.valueOf(color));
+
+        getSupportActionBar().setBackgroundDrawable(new ColorDrawable(color));
     }
 
-    @Override
-    public void onFolderLongClick(Folder folder, int position) {
-        showFolderOptionsDialog(folder);
-    }
-
-    private void showFolderOptionsDialog(Folder folder) {
-        String[] options = {"Modificar carpeta", "Eliminar carpeta"};
-
-        new androidx.appcompat.app.AlertDialog.Builder(this)
-                .setTitle("Opciones de carpeta")
-                .setItems(options, (dialog, which) -> {
-                    if (which == 0) {
-                        dialogManager.showFolderEditDialog(folder, updatedFolder -> loadFolders());
-                    } else if (which == 1) {
-                        Notifier.showDeleteConfirmation(this, "¿Eliminar esta carpeta?", () -> {
-                            folderManager.deleteFolder(folder);
-                            loadFolders();
-                            Notifier.showInfo(this, "Carpeta eliminada: " + folder.getName());
-                        });
-                    }
-                })
-                .setNegativeButton("Cancelar", null)
-                .show();
+    /**
+     * Cambia el color de los iconos y texto en la barra de navegación inferior.
+     *
+     * @param colorHex Código hexadecimal del color a aplicar.
+     */
+    public void changeBottomNavigationIconColor(String colorHex) {
+        int color = Color.parseColor(colorHex);
+        binding.navView.setItemIconTintList(android.content.res.ColorStateList.valueOf(color));
+        binding.navView.setItemTextColor(android.content.res.ColorStateList.valueOf(color));
     }
 }

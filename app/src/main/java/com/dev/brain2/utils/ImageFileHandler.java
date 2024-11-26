@@ -10,15 +10,27 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
-// Esta clase maneja la creación y gestión de archivos de imagen temporales
+/**
+ * Esta clase maneja la creación y gestión de archivos de imagen temporales.
+ */
 public class ImageFileHandler {
     private final Context context;
 
+    /**
+     * Constructor.
+     *
+     * @param context Contexto de la aplicación.
+     */
     public ImageFileHandler(Context context) {
         this.context = context;
     }
 
-    // Crea un archivo temporal para guardar una foto
+    /**
+     * Crea un archivo temporal para guardar una foto.
+     *
+     * @return URI del archivo temporal creado.
+     * @throws IOException Si ocurre un error al crear el archivo.
+     */
     public Uri createTemporaryImageFile() throws IOException {
         // Creamos el archivo temporal
         File photoFile = createImageFile();
@@ -31,7 +43,12 @@ public class ImageFileHandler {
         );
     }
 
-    // Crea un archivo con nombre único basado en la fecha
+    /**
+     * Crea un archivo con nombre único basado en la fecha.
+     *
+     * @return Archivo temporal creado.
+     * @throws IOException Si ocurre un error al crear el archivo.
+     */
     private File createImageFile() throws IOException {
         // Creamos un nombre único usando la fecha actual
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())

@@ -6,7 +6,9 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.appcompat.app.AppCompatActivity;
 
-// Esta clase se encarga de manejar los permisos de la aplicación
+/**
+ * Esta clase se encarga de manejar los permisos de la aplicación.
+ */
 public class PermissionManager {
     // Contexto necesario para verificar permisos
     private final Context context;
@@ -14,21 +16,38 @@ public class PermissionManager {
     // Callback para informar sobre el resultado de la solicitud de permisos
     private PermissionCallback callback;
 
-    // Constructor
+    /**
+     * Constructor.
+     *
+     * @param context Contexto de la aplicación.
+     */
     public PermissionManager(Context context) {
         this.context = context;
     }
 
-    // Interfaz para manejar las respuestas de los permisos
+    /**
+     * Interfaz para manejar las respuestas de los permisos.
+     */
     public interface PermissionCallback {
-        // Se llama cuando el usuario acepta el permiso
+        /**
+         * Se llama cuando el usuario acepta el permiso.
+         */
         void onPermissionGranted();
 
-        // Se llama cuando el usuario rechaza el permiso
+        /**
+         * Se llama cuando el usuario rechaza el permiso.
+         */
         void onPermissionDenied();
     }
 
-    // Solicita un permiso específico
+    /**
+     * Solicita un permiso específico.
+     *
+     * @param activity    Actividad desde la cual se solicita el permiso.
+     * @param permission  Permiso a solicitar.
+     * @param requestCode Código de solicitud.
+     * @param callback    Callback para manejar la respuesta.
+     */
     public void requestPermission(AppCompatActivity activity,
                                   String permission,
                                   int requestCode,
@@ -51,7 +70,12 @@ public class PermissionManager {
         }
     }
 
-    // Maneja el resultado de la solicitud de permisos
+    /**
+     * Maneja el resultado de la solicitud de permisos.
+     *
+     * @param requestCode  Código de solicitud.
+     * @param grantResults Resultados de los permisos solicitados.
+     */
     public void handlePermissionsResult(int requestCode, int[] grantResults) {
         // Verificamos si se concedió el permiso
         if (grantResults.length > 0 &&

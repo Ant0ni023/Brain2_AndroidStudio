@@ -10,38 +10,60 @@ import androidx.appcompat.app.AlertDialog;
 import com.dev.brain2.R;
 import com.dev.brain2.managers.FolderManager;
 import com.dev.brain2.models.Folder;
-import com.dev.brain2.utils.FolderColor;
+import com.dev.brain2.utils.ColorManager;
 import com.dev.brain2.utils.Notifier;
 import java.util.List;
 
-// Esta clase maneja todos los diálogos relacionados con las carpetas
+/**
+ * Esta clase maneja todos los diálogos relacionados con las carpetas.
+ */
 public class FolderDialog {
     // Variables necesarias para crear y gestionar los diálogos
     private final Context context;
     private final FolderManager folderManager;
 
-    // Constructor
+    /**
+     * Constructor.
+     *
+     * @param context       Contexto de la aplicación.
+     * @param folderManager Manager para manejar las carpetas.
+     */
     public FolderDialog(Context context, FolderManager folderManager) {
         this.context = context;
         this.folderManager = folderManager;
     }
 
-    // Interfaz para notificar cuando se completa una acción con una carpeta
+    /**
+     * Interfaz para notificar cuando se completa una acción con una carpeta.
+     */
     public interface FolderDialogListener {
         void onFolderActionComplete(Folder folder);
     }
 
-    // Muestra el diálogo para crear una nueva carpeta
+    /**
+     * Muestra el diálogo para crear una nueva carpeta.
+     *
+     * @param listener Listener que recibe la carpeta creada.
+     */
     public void showCreationDialog(FolderDialogListener listener) {
         showFolderDialog(null, listener, true);
     }
 
-    // Muestra el diálogo para editar una carpeta existente
+    /**
+     * Muestra el diálogo para editar una carpeta existente.
+     *
+     * @param folder   Carpeta a editar.
+     * @param listener Listener que recibe la carpeta actualizada.
+     */
     public void showEditDialog(Folder folder, FolderDialogListener listener) {
         showFolderDialog(folder, listener, false);
     }
 
-    // Muestra el diálogo para seleccionar una carpeta existente
+    /**
+     * Muestra el diálogo para seleccionar una carpeta existente.
+     *
+     * @param listener Listener que recibe la carpeta seleccionada.
+     */
     public void showSelectionDialog(FolderDialogListener listener) {
         // Obtenemos la lista de carpetas disponibles
         List<Folder> folders = folderManager.getFolders();
@@ -72,7 +94,13 @@ public class FolderDialog {
                 .show();
     }
 
-    // Método principal que maneja el diálogo de crear/editar carpeta
+    /**
+     * Método principal que maneja el diálogo de crear/editar carpeta.
+     *
+     * @param folder     Carpeta a editar (nulo si es creación).
+     * @param listener   Listener que recibe la carpeta creada/actualizada.
+     * @param isCreation Indica si es creación o edición.
+     */
     private void showFolderDialog(Folder folder, FolderDialogListener listener, boolean isCreation) {
         // Creamos la vista del diálogo
         View dialogView = LayoutInflater.from(context)
@@ -84,7 +112,7 @@ public class FolderDialog {
         ArrayAdapter<String> colorAdapter = new ArrayAdapter<>(
                 context,
                 android.R.layout.simple_spinner_item,
-                FolderColor.COLOR_NAMES
+                ColorManager.COLOR_NAMES
         );
         colorAdapter.setDropDownViewResource(
                 android.R.layout.simple_spinner_dropdown_item
@@ -94,7 +122,7 @@ public class FolderDialog {
         // Si estamos editando, rellenamos los campos con los datos actuales
         if (!isCreation && folder != null) {
             folderNameInput.setText(folder.getName());
-            colorSpinner.setSelection(FolderColor.getColorIndex(folder.getColor()));
+            colorSpinner.setSelection(ColorManager.getColorIndex(folder.getColor()));
         }
 
         // Creamos y mostramos el diálogo
@@ -104,7 +132,7 @@ public class FolderDialog {
                 .setPositiveButton("Guardar", (dialog, which) -> {
                     // Obtenemos los datos ingresados
                     String folderName = folderNameInput.getText().toString().trim();
-                    String selectedColor = FolderColor.getColorByIndex(
+                    String selectedColor = ColorManager.getColorByIndex(
                             colorSpinner.getSelectedItemPosition()
                     );
 
@@ -127,14 +155,26 @@ public class FolderDialog {
                 .show();
     }
 
-    // Método auxiliar para crear una nueva carpeta
+    /**
+     * Método auxiliar para crear una nueva carpeta.
+     *
+     * @param name  Nombre de la carpeta.
+     * @param color Color asignado a la carpeta.
+     * @return La carpeta creada.
+     */
     private Folder createFolder(String name, String color) {
         Folder newFolder = new Folder(name, color);
         folderManager.addFolder(newFolder);
         return newFolder;
     }
 
-    // Método auxiliar para actualizar una carpeta existente
+    /**
+     * Método auxiliar para actualizar una carpeta existente.
+     *
+     * @param folder   Carpeta a actualizar.
+     * @param newName  Nuevo nombre de la carpeta.
+     * @param newColor Nuevo color de la carpeta.
+     */
     private void updateFolder(Folder folder, String newName, String newColor) {
         folder.setName(newName);
         folder.setColor(newColor);

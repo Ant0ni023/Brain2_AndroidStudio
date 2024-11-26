@@ -3,13 +3,19 @@ package com.dev.brain2.managers;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Environment;
-import com.google.gson.Gson;
+import com.dev.brain2.fragments.SettingsFragment;
 import com.dev.brain2.models.Folder;
+import com.dev.brain2.utils.SettingsPrefHelper;
+import com.google.gson.Gson;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
-// Esta clase se encarga de gestionar las carpetas de la aplicación
+/**
+ * Esta clase se encarga de gestionar las carpetas de la aplicación.
+ */
 public class FolderManager {
     // Nombres para guardar las preferencias
     private static final String PREFS_NAME = "Brain2Prefs";
@@ -17,17 +23,27 @@ public class FolderManager {
 
     // Variables para manejar el almacenamiento
     private SharedPreferences sharedPreferences;
+    private SettingsPrefHelper settingsPrefHelper;
     private Gson gson;
     private Context context;
 
-    // Constructor
+    /**
+     * Constructor.
+     *
+     * @param context Contexto de la aplicación.
+     */
     public FolderManager(Context context) {
         this.context = context;
         this.sharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        this.settingsPrefHelper = new SettingsPrefHelper(context);
         this.gson = new Gson();
     }
 
-    // Crea una nueva carpeta
+    /**
+     * Crea una nueva carpeta.
+     *
+     * @param folder Carpeta a agregar.
+     */
     public void addFolder(Folder folder) {
         // Si la carpeta no tiene ID, le creamos uno
         if (folder.getId() == null) {
@@ -43,25 +59,56 @@ public class FolderManager {
         createFolderOnDisk(folder.getName());
     }
 
-    // Obtiene la lista de todas las carpetas
+    /**
+     * Obtiene la lista de carpetas.
+     *
+     * @return Lista de carpetas.
+     */
     public List<Folder> getFolders() {
-        // Obtenemos el JSON guardado
+        // Obtener JSON guardado y preferencias
         String foldersJson = sharedPreferences.getString(FOLDERS_KEY, "[]");
+        boolean shouldShowLastOpenFirst = settingsPrefHelper.getBoolean(SettingsFragment.KEY_LAST_OPENED, false);
+        String recentFoldersJson = settingsPrefHelper.getString("recentFolders", "[]");
 
-        // Convertimos el JSON a un array de carpetas
+        // Convertir JSON a array
         Folder[] folderArray = gson.fromJson(foldersJson, Folder[].class);
-
-        // Creamos una lista y añadimos todas las carpetas
-        List<Folder> folders = new ArrayList<>();
-        if (folderArray != null) {
-            for (Folder folder : folderArray) {
-                folders.add(folder);
-            }
+        if (folderArray == null) {
+            return new ArrayList<>();
         }
-        return folders;
+
+        List<Folder> folders = new ArrayList<>(Arrays.asList(folderArray));
+
+        if (shouldShowLastOpenFirst) {
+            // Obtener lista de IDs de carpetas recientes
+            List<String> recentFolderIds = new ArrayList<>(Arrays.asList(gson.fromJson(recentFoldersJson, String[].class)));
+            // Crear un mapa de IDs a carpetas
+            HashMap<String, Folder> folderMap = new HashMap<>();
+            for (Folder folder : folders) {
+                folderMap.put(folder.getId(), folder);
+            }
+            // Construir una nueva lista de carpetas
+            List<Folder> reorderedFolders = new ArrayList<>();
+            // Agregar carpetas según el orden de recientes
+            for (String id : recentFolderIds) {
+                Folder folder = folderMap.get(id);
+                if (folder != null) {
+                    reorderedFolders.add(folder);
+                    folders.remove(folder); // Eliminar de la lista original
+                }
+            }
+            // Agregar las carpetas restantes
+            reorderedFolders.addAll(folders);
+            return reorderedFolders;
+        } else {
+            return folders;
+        }
     }
 
-    // Actualiza una carpeta existente
+    /**
+     * Actualiza una carpeta existente.
+     *
+     * @param folder Carpeta a actualizar.
+     */
     public void updateFolder(Folder folder) {
         List<Folder> folders = getFolders();
 
@@ -86,7 +133,11 @@ public class FolderManager {
         }
     }
 
-    // Elimina una carpeta
+    /**
+     * Elimina una carpeta.
+     *
+     * @param folder Carpeta a eliminar.
+     */
     public void deleteFolder(Folder folder) {
         List<Folder> folders = getFolders();
         // Eliminamos la carpeta de la lista
@@ -97,7 +148,11 @@ public class FolderManager {
         deleteFolderOnDisk(folder.getName());
     }
 
-    // Guarda la lista de carpetas en las preferencias
+    /**
+     * Guarda la lista de carpetas en las preferencias.
+     *
+     * @param folders Lista de carpetas.
+     */
     private void saveFolders(List<Folder> folders) {
         String json = gson.toJson(folders);
         sharedPreferences.edit()
@@ -105,7 +160,12 @@ public class FolderManager {
                 .apply();
     }
 
-    // Crea una carpeta en el almacenamiento
+    /**
+     * Crea una carpeta en el almacenamiento.
+     *
+     * @param folderName Nombre de la carpeta.
+     * @return Archivo de la carpeta creada.
+     */
     public File createFolderOnDisk(String folderName) {
         File baseDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         File newFolder = new File(baseDir, folderName);
@@ -115,7 +175,12 @@ public class FolderManager {
         return newFolder;
     }
 
-    // Renombra una carpeta en el almacenamiento
+    /**
+     * Renombra una carpeta en el almacenamiento.
+     *
+     * @param oldName Nombre antiguo.
+     * @param newName Nuevo nombre.
+     */
     private void renameFolderOnDisk(String oldName, String newName) {
         File baseDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         File oldFolder = new File(baseDir, oldName);
@@ -125,13 +190,21 @@ public class FolderManager {
         }
     }
 
-    // Elimina una carpeta del almacenamiento
+    /**
+     * Elimina una carpeta del almacenamiento.
+     *
+     * @param folderName Nombre de la carpeta.
+     */
     private void deleteFolderOnDisk(String folderName) {
         File folder = new File(context.getExternalFilesDir(Environment.DIRECTORY_PICTURES), folderName);
         deleteRecursive(folder);
     }
 
-    // Elimina una carpeta y todo su contenido
+    /**
+     * Elimina una carpeta y todo su contenido recursivamente.
+     *
+     * @param file Archivo o carpeta a eliminar.
+     */
     private void deleteRecursive(File file) {
         if (file != null && file.exists()) {
             if (file.isDirectory()) {
@@ -146,7 +219,12 @@ public class FolderManager {
         }
     }
 
-    // Busca una carpeta por su ID
+    /**
+     * Busca una carpeta por su ID.
+     *
+     * @param folderId ID de la carpeta.
+     * @return Carpeta encontrada o null si no existe.
+     */
     public Folder getFolderById(String folderId) {
         for (Folder folder : getFolders()) {
             if (folder.getId().equals(folderId)) {
@@ -156,7 +234,12 @@ public class FolderManager {
         return null;
     }
 
-    // Busca una carpeta por su nombre
+    /**
+     * Busca una carpeta por su nombre.
+     *
+     * @param folderName Nombre de la carpeta.
+     * @return Carpeta encontrada o null si no existe.
+     */
     public Folder getFolderByName(String folderName) {
         for (Folder folder : getFolders()) {
             if (folder.getName().equals(folderName)) {
@@ -166,16 +249,24 @@ public class FolderManager {
         return null;
     }
 
-    // Obtiene todas las carpetas excepto una específica
+    /**
+     * Obtiene todas las carpetas excepto una específica.
+     *
+     * @param excludeFolder Carpeta a excluir.
+     * @return Lista de carpetas disponibles.
+     */
     public List<Folder> getAvailableFolders(Folder excludeFolder) {
         List<Folder> availableFolders = getFolders();
         availableFolders.removeIf(folder -> folder.getId().equals(excludeFolder.getId()));
         return availableFolders;
     }
 
-    // Obtiene la lista de todas las carpetas (Alias de getFolders)
+    /**
+     * Obtiene la lista de todas las carpetas.
+     *
+     * @return Lista de carpetas.
+     */
     public List<Folder> getAllFolders() {
         return getFolders();
     }
-
 }

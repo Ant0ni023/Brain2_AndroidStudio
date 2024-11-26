@@ -3,7 +3,9 @@ package com.dev.brain2.utils;
 import android.content.Context;
 import android.util.DisplayMetrics;
 
-// Esta clase se encarga de realizar todos los cálculos relacionados con el grid
+/**
+ * Esta clase se encarga de realizar todos los cálculos relacionados con el grid.
+ */
 public class GridCalculator {
     // Configuración básica del grid
     private static final int COLUMNS = 2;
@@ -17,6 +19,11 @@ public class GridCalculator {
     private final int margin;
     private final int spacing;
 
+    /**
+     * Constructor que inicializa los cálculos del grid.
+     *
+     * @param context Contexto de la aplicación.
+     */
     public GridCalculator(Context context) {
         // Obtenemos las dimensiones de la pantalla
         DisplayMetrics metrics = context.getResources().getDisplayMetrics();
@@ -33,7 +40,12 @@ public class GridCalculator {
         itemHeight = itemWidth; // Items cuadrados
     }
 
-    // Calcula las coordenadas X,Y para una posición
+    /**
+     * Calcula las coordenadas X, Y para una posición dada.
+     *
+     * @param position Posición del item.
+     * @return Arreglo con las coordenadas [x, y].
+     */
     public int[] getItemCoordinates(int position) {
         int[] coordinates = new int[2];
 
@@ -48,16 +60,51 @@ public class GridCalculator {
         return coordinates;
     }
 
-    // Calcula la altura total necesaria para todos los items
+    /**
+     * Calcula la altura total necesaria para todos los items.
+     *
+     * @param itemCount Número total de items.
+     * @return Altura total en píxeles.
+     */
     public int calculateTotalHeight(int itemCount) {
         int rows = (int) Math.ceil(itemCount / (float) COLUMNS);
         return (rows * (itemHeight + spacing)) + margin;
     }
 
     // Getters para las dimensiones
+
+    /**
+     * Obtiene el ancho de cada item.
+     *
+     * @return Ancho del item en píxeles.
+     */
     public int getItemWidth() { return itemWidth; }
+
+    /**
+     * Obtiene la altura de cada item.
+     *
+     * @return Altura del item en píxeles.
+     */
     public int getItemHeight() { return itemHeight; }
+
+    /**
+     * Obtiene el margen.
+     *
+     * @return Margen en píxeles.
+     */
     public int getMargin() { return margin; }
+
+    /**
+     * Obtiene el espacio entre items.
+     *
+     * @return Espacio en píxeles.
+     */
     public int getSpacing() { return spacing; }
+
+    /**
+     * Obtiene el número de columnas.
+     *
+     * @return Número de columnas.
+     */
     public int getColumns() { return COLUMNS; }
 }
