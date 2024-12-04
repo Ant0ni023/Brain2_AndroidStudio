@@ -8,24 +8,24 @@ public class ColorManager {
     // Constructor privado para evitar instancias de esta clase
     private ColorManager() {}
 
-    // Colores para las carpetas
+    // ====== COLORES PARA LAS CARPETAS ======
+
     public static final String[] FOLDER_COLOR_NAMES = {
-            "Azul",     // Color alternativo
-            "Rojo",     // Color alternativo
-            "Verde",    // Color alternativo
-            "Amarillo", // Color alternativo
-            "Naranja",  // Color alternativo
-            "Morado",   // Color alternativo
-            "Negro",    // Color adicional
-            "Café"      // Color adicional
+            "Azul",
+            "Rojo",
+            "Verde",
+            "Amarillo",
+            "Naranja",
+            "Morado",
+            "Negro",
+            "Café"
     };
 
-    // Valores hexadecimales de los colores de las carpetas
     public static final String[] FOLDER_COLOR_VALUES = {
-            "#1E90FF", // Azul claro
-            "#FF0000", // Rojo puro
-            "#00FF00", // Verde brillante
-            "#FFFF00", // Amarillo brillante
+            "#1E90FF", // Azul
+            "#FF0000", // Rojo
+            "#00FF00", // Verde
+            "#FFFF00", // Amarillo
             "#FFA500", // Naranja
             "#800080", // Morado
             "#000000", // Negro
@@ -39,12 +39,7 @@ public class ColorManager {
      * @return Valor hexadecimal del color.
      */
     public static String getFolderColorByIndex(int index) {
-        // Verifica que el índice sea válido
-        if (index >= 0 && index < FOLDER_COLOR_VALUES.length) {
-            return FOLDER_COLOR_VALUES[index];
-        }
-        // Si el índice no es válido, devuelve el primer color (Azul)
-        return FOLDER_COLOR_VALUES[0];
+        return getColorByIndex(index, FOLDER_COLOR_VALUES);
     }
 
     /**
@@ -54,35 +49,28 @@ public class ColorManager {
      * @return Índice del color, -1 si no se encuentra.
      */
     public static int getFolderColorIndex(String color) {
-        // Recorre la lista de colores buscando una coincidencia
-        for (int i = 0; i < FOLDER_COLOR_VALUES.length; i++) {
-            if (FOLDER_COLOR_VALUES[i].equalsIgnoreCase(color)) {
-                return i;
-            }
-        }
-        // Si no encuentra el color, devuelve -1
-        return -1;
+        return getColorIndex(color, FOLDER_COLOR_VALUES);
     }
 
-    // Colores para las barras
+    // ====== COLORES PARA LAS BARRAS ======
+
     public static final String[] BAR_COLOR_NAMES = {
-            "Negro",    // Color adicional
-            "Azul",     // Color alternativo
-            "Rojo",     // Color alternativo
-            "Verde",    // Color alternativo
-            "Amarillo", // Color alternativo
-            "Naranja",  // Color alternativo
-            "Morado",   // Color alternativo
-            "Café"      // Color adicional
+            "Negro",
+            "Azul",
+            "Rojo",
+            "Verde",
+            "Amarillo",
+            "Naranja",
+            "Morado",
+            "Café"
     };
 
-    // Valores hexadecimales de los colores de las barras
     public static final String[] BAR_COLOR_VALUES = {
             "#000000", // Negro
-            "#1E90FF", // Azul claro
-            "#FF0000", // Rojo puro
-            "#00FF00", // Verde brillante
-            "#FFFF00", // Amarillo brillante
+            "#1E90FF", // Azul
+            "#FF0000", // Rojo
+            "#00FF00", // Verde
+            "#FFFF00", // Amarillo
             "#FFA500", // Naranja
             "#800080", // Morado
             "#A52A2A"  // Café
@@ -95,12 +83,7 @@ public class ColorManager {
      * @return Valor hexadecimal del color.
      */
     public static String getBarColorByIndex(int index) {
-        // Verifica que el índice sea válido
-        if (index >= 0 && index < BAR_COLOR_VALUES.length) {
-            return BAR_COLOR_VALUES[index];
-        }
-        // Si el índice no es válido, devuelve el primer color (Negro)
-        return BAR_COLOR_VALUES[0];
+        return getColorByIndex(index, BAR_COLOR_VALUES);
     }
 
     /**
@@ -110,37 +93,30 @@ public class ColorManager {
      * @return Índice del color, -1 si no se encuentra.
      */
     public static int getBarColorIndex(String color) {
-        // Recorre la lista de colores buscando una coincidencia
-        for (int i = 0; i < BAR_COLOR_VALUES.length; i++) {
-            if (BAR_COLOR_VALUES[i].equalsIgnoreCase(color)) {
-                return i;
-            }
-        }
-        // Si no encuentra el color, devuelve -1
-        return -1;
+        return getColorIndex(color, BAR_COLOR_VALUES);
     }
 
-    // Colores para los iconos
+    // ====== COLORES PARA LOS ICONOS ======
+
     public static final String[] ICON_COLOR_NAMES = {
-            "Blanco",   // Color adicional
-            "Negro",    // Color adicional
-            "Azul",     // Color alternativo
-            "Rojo",     // Color alternativo
-            "Verde",    // Color alternativo
-            "Amarillo", // Color alternativo
-            "Naranja",  // Color alternativo
-            "Morado",   // Color alternativo
-            "Café"      // Color adicional
+            "Blanco",
+            "Negro",
+            "Azul",
+            "Rojo",
+            "Verde",
+            "Amarillo",
+            "Naranja",
+            "Morado",
+            "Café"
     };
 
-    // Valores hexadecimales de los colores de los iconos
     public static final String[] ICON_COLOR_VALUES = {
             "#FFFFFF", // Blanco
             "#000000", // Negro
-            "#1E90FF", // Azul claro
-            "#FF0000", // Rojo puro
-            "#00FF00", // Verde brillante
-            "#FFFF00", // Amarillo brillante
+            "#1E90FF", // Azul
+            "#FF0000", // Rojo
+            "#00FF00", // Verde
+            "#FFFF00", // Amarillo
             "#FFA500", // Naranja
             "#800080", // Morado
             "#A52A2A"  // Café
@@ -153,12 +129,7 @@ public class ColorManager {
      * @return Valor hexadecimal del color.
      */
     public static String getIconColorByIndex(int index) {
-        // Verifica que el índice sea válido
-        if (index >= 0 && index < ICON_COLOR_VALUES.length) {
-            return ICON_COLOR_VALUES[index];
-        }
-        // Si el índice no es válido, devuelve el primer color (Blanco)
-        return ICON_COLOR_VALUES[0];
+        return getColorByIndex(index, ICON_COLOR_VALUES);
     }
 
     /**
@@ -168,68 +139,38 @@ public class ColorManager {
      * @return Índice del color, -1 si no se encuentra.
      */
     public static int getIconColorIndex(String color) {
-        // Recorre la lista de colores buscando una coincidencia
-        for (int i = 0; i < ICON_COLOR_VALUES.length; i++) {
-            if (ICON_COLOR_VALUES[i].equalsIgnoreCase(color)) {
-                return i;
-            }
-        }
-        // Si no encuentra el color, devuelve -1
-        return -1;
+        return getColorIndex(color, ICON_COLOR_VALUES);
     }
 
-    // Métodos existentes
-
-    // Lista de nombres de colores (original)
-    public static final String[] COLOR_NAMES = {
-            "Azul",     // Color alternativo
-            "Rojo",     // Color alternativo
-            "Verde",    // Color alternativo
-            "Amarillo", // Color alternativo
-            "Naranja",  // Color alternativo
-            "Morado"    // Color alternativo
-    };
-
-    // Valores hexadecimales de los colores (original)
-    public static final String[] COLOR_VALUES = {
-            "#1E90FF", // Azul claro
-            "#FF0000", // Rojo puro
-            "#00FF00", // Verde brillante
-            "#FFFF00", // Amarillo brillante
-            "#FFA500", // Naranja
-            "#800080"  // Morado
-    };
+    // ====== MÉTODOS GENÉRICOS PARA COLORES ======
 
     /**
-     * Obtiene el valor hexadecimal de un color por su índice.
+     * Obtiene el valor hexadecimal de un color por su índice y arreglo de colores.
      *
      * @param index Índice del color.
+     * @param colorValues Arreglo de valores de colores.
      * @return Valor hexadecimal del color.
      */
-    public static String getColorByIndex(int index) {
-        // Verifica que el índice sea válido
-        if (index >= 0 && index < COLOR_VALUES.length) {
-            return COLOR_VALUES[index];
+    private static String getColorByIndex(int index, String[] colorValues) {
+        if (index >= 0 && index < colorValues.length) {
+            return colorValues[index];
         }
-        // Si el índice no es válido, devuelve el primer color (Azul)
-        return COLOR_VALUES[0];
+        return colorValues[0];
     }
 
     /**
-     * Busca el índice de un color por su valor hexadecimal.
+     * Busca el índice de un color por su valor hexadecimal y arreglo de colores.
      *
      * @param color Valor hexadecimal del color.
+     * @param colorValues Arreglo de valores de colores.
      * @return Índice del color, -1 si no se encuentra.
      */
-    public static int getColorIndex(String color) {
-        // Recorre la lista de colores buscando una coincidencia
-        for (int i = 0; i < COLOR_VALUES.length; i++) {
-            if (COLOR_VALUES[i].equalsIgnoreCase(color)) {
+    private static int getColorIndex(String color, String[] colorValues) {
+        for (int i = 0; i < colorValues.length; i++) {
+            if (colorValues[i].equalsIgnoreCase(color)) {
                 return i;
             }
         }
-        // Si no encuentra el color, devuelve -1
         return -1;
     }
-
 }

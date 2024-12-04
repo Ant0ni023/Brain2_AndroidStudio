@@ -9,7 +9,7 @@ import java.util.List;
  * Esta clase representa una carpeta que puede contener imágenes.
  */
 public class Folder implements Serializable {
-    // Propiedades básicas de la carpeta
+
     private String id;          // Identificador único de la carpeta
     private String name;        // Nombre de la carpeta
     private String color;       // Color para mostrar en la interfaz
@@ -86,7 +86,7 @@ public class Folder implements Serializable {
     // MÉTODOS PARA MANEJAR IMÁGENES
 
     /**
-     * Obtiene la lista de imágenes (solo lectura para evitar modificaciones directas).
+     * Obtiene una lista inmutable de las imágenes en la carpeta.
      *
      * @return Lista inmutable de imágenes.
      */
@@ -95,7 +95,7 @@ public class Folder implements Serializable {
     }
 
     /**
-     * Establece una nueva lista de imágenes (crea una copia para mayor seguridad).
+     * Establece una nueva lista de imágenes.
      *
      * @param images Lista de imágenes a establecer.
      */
@@ -107,8 +107,12 @@ public class Folder implements Serializable {
      * Agrega una nueva imagen a la carpeta.
      *
      * @param image La imagen a agregar.
+     * @throws IllegalArgumentException Si la imagen es nula.
      */
     public void addImage(Image image) {
+        if (image == null) {
+            throw new IllegalArgumentException("La imagen no puede ser nula");
+        }
         images.add(image);
     }
 

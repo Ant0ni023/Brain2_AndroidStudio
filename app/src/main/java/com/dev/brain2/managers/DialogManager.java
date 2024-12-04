@@ -10,7 +10,6 @@ import com.dev.brain2.models.Image;
  * Esta clase centraliza la gestión de todos los diálogos de la aplicación.
  */
 public class DialogManager {
-    // Manejadores de diálogos específicos para carpetas e imágenes
     private final FolderDialog folderDialog;    // Maneja diálogos de carpetas
     private final ImageDialog imageDialog;      // Maneja diálogos de imágenes
 
@@ -24,7 +23,6 @@ public class DialogManager {
     public DialogManager(Context context,
                          FolderManager folderManager,
                          ImageManager imageManager) {
-        // Creamos las instancias de los manejadores específicos
         this.folderDialog = new FolderDialog(context, folderManager);
         this.imageDialog = new ImageDialog(context, imageManager, folderManager);
     }

@@ -6,20 +6,23 @@ import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.Spinner;
+
 import androidx.appcompat.app.AlertDialog;
+
 import com.dev.brain2.R;
 import com.dev.brain2.managers.FolderManager;
 import com.dev.brain2.models.Folder;
 import com.dev.brain2.utils.ColorManager;
 import com.dev.brain2.utils.Notifier;
+
 import java.util.List;
 
 /**
  * Esta clase maneja todos los diálogos relacionados con las carpetas.
  */
 public class FolderDialog {
-    // Variables necesarias para crear y gestionar los diálogos
-    private final Context context;
+
+    private final Context appContext;
     private final FolderManager folderManager;
 
     /**
@@ -29,7 +32,7 @@ public class FolderDialog {
      * @param folderManager Manager para manejar las carpetas.
      */
     public FolderDialog(Context context, FolderManager folderManager) {
-        this.context = context;
+        this.appContext = context;
         this.folderManager = folderManager;
     }
 
@@ -65,26 +68,41 @@ public class FolderDialog {
      * @param listener Listener que recibe la carpeta seleccionada.
      */
     public void showSelectionDialog(FolderDialogListener listener) {
-        // Obtenemos la lista de carpetas disponibles
         List<Folder> folders = folderManager.getFolders();
 
-        // Si no hay carpetas, mostramos diálogo para crear una
         if (folders.isEmpty()) {
-            new AlertDialog.Builder(context)
-                    .setTitle("No hay carpetas disponibles")
-                    .setMessage("¿Desea crear una carpeta?")
-                    .setPositiveButton("Crear", (dialog, which) -> showCreationDialog(listener))
-                    .setNegativeButton("Cancelar", null)
-                    .show();
-            return;
+            showNoFoldersDialog(listener);
+        } else {
+            showFolderSelectionDialog(folders, listener);
         }
+    }
 
-        // Si hay carpetas, mostramos la lista para seleccionar
+    /**
+     * Muestra un diálogo cuando no hay carpetas disponibles.
+     *
+     * @param listener Listener para crear una nueva carpeta.
+     */
+    private void showNoFoldersDialog(FolderDialogListener listener) {
+        new AlertDialog.Builder(appContext)
+                .setTitle("No hay carpetas disponibles")
+                .setMessage("¿Desea crear una carpeta?")
+                .setPositiveButton("Crear", (dialog, which) -> showCreationDialog(listener))
+                .setNegativeButton("Cancelar", null)
+                .show();
+    }
+
+    /**
+     * Muestra un diálogo para seleccionar una carpeta existente.
+     *
+     * @param folders  Lista de carpetas disponibles.
+     * @param listener Listener que recibe la carpeta seleccionada.
+     */
+    private void showFolderSelectionDialog(List<Folder> folders, FolderDialogListener listener) {
         String[] folderNames = folders.stream()
                 .map(Folder::getName)
                 .toArray(String[]::new);
 
-        new AlertDialog.Builder(context)
+        new AlertDialog.Builder(appContext)
                 .setTitle("Seleccionar Carpeta")
                 .setItems(folderNames, (dialog, which) ->
                         listener.onFolderActionComplete(folders.get(which)))
@@ -102,57 +120,95 @@ public class FolderDialog {
      * @param isCreation Indica si es creación o edición.
      */
     private void showFolderDialog(Folder folder, FolderDialogListener listener, boolean isCreation) {
-        // Creamos la vista del diálogo
-        View dialogView = LayoutInflater.from(context)
-                .inflate(R.layout.dialog_create_folder, null);
-        EditText folderNameInput = dialogView.findViewById(R.id.folderNameInput);
+        View dialogView = createFolderDialogView(folder, isCreation);
+        EditText editTextFolderName = dialogView.findViewById(R.id.folderNameInput);
         Spinner colorSpinner = dialogView.findViewById(R.id.colorSpinner);
 
-        // Configuramos el spinner de colores
-        ArrayAdapter<String> colorAdapter = new ArrayAdapter<>(
-                context,
-                android.R.layout.simple_spinner_item,
-                ColorManager.COLOR_NAMES
-        );
-        colorAdapter.setDropDownViewResource(
-                android.R.layout.simple_spinner_dropdown_item
-        );
-        colorSpinner.setAdapter(colorAdapter);
-
-        // Si estamos editando, rellenamos los campos con los datos actuales
-        if (!isCreation && folder != null) {
-            folderNameInput.setText(folder.getName());
-            colorSpinner.setSelection(ColorManager.getColorIndex(folder.getColor()));
-        }
-
-        // Creamos y mostramos el diálogo
-        new AlertDialog.Builder(context)
+        new AlertDialog.Builder(appContext)
                 .setTitle(isCreation ? "Crear Carpeta" : "Editar Carpeta")
                 .setView(dialogView)
                 .setPositiveButton("Guardar", (dialog, which) -> {
-                    // Obtenemos los datos ingresados
-                    String folderName = folderNameInput.getText().toString().trim();
-                    String selectedColor = ColorManager.getColorByIndex(
-                            colorSpinner.getSelectedItemPosition()
-                    );
-
-                    // Validamos el nombre
-                    if (folderName.isEmpty()) {
-                        Notifier.showError(context, "El nombre no puede estar vacío");
-                        return;
-                    }
-
-                    // Creamos o actualizamos la carpeta según corresponda
-                    if (isCreation) {
-                        Folder newFolder = createFolder(folderName, selectedColor);
-                        listener.onFolderActionComplete(newFolder);
-                    } else if (folder != null) {
-                        updateFolder(folder, folderName, selectedColor);
-                        listener.onFolderActionComplete(folder);
-                    }
+                    handleFolderDialogPositiveClick(folder, listener, isCreation, editTextFolderName, colorSpinner);
                 })
                 .setNegativeButton("Cancelar", null)
                 .show();
+    }
+
+    /**
+     * Crea la vista para el diálogo de carpeta.
+     *
+     * @param folder     Carpeta a editar (nulo si es creación).
+     * @param isCreation Indica si es creación o edición.
+     * @return Vista del diálogo.
+     */
+    private View createFolderDialogView(Folder folder, boolean isCreation) {
+        View dialogView = LayoutInflater.from(appContext)
+                .inflate(R.layout.dialog_create_folder, null);
+        EditText editTextFolderName = dialogView.findViewById(R.id.folderNameInput);
+        Spinner colorSpinner = dialogView.findViewById(R.id.colorSpinner);
+
+        setupColorSpinner(colorSpinner);
+
+        if (!isCreation && folder != null) {
+            prefillDialogFields(editTextFolderName, colorSpinner, folder);
+        }
+
+        return dialogView;
+    }
+
+    /**
+     * Configura el spinner de colores.
+     *
+     * @param colorSpinner Spinner a configurar.
+     */
+    private void setupColorSpinner(Spinner colorSpinner) {
+        ArrayAdapter<String> colorAdapter = new ArrayAdapter<>(
+                appContext,
+                android.R.layout.simple_spinner_item,
+                ColorManager.FOLDER_COLOR_NAMES
+        );
+        colorAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        colorSpinner.setAdapter(colorAdapter);
+    }
+
+    /**
+     * Rellena los campos del diálogo con los datos actuales.
+     *
+     * @param editTextFolderName Campo de texto para el nombre.
+     * @param colorSpinner       Spinner de colores.
+     * @param folder             Carpeta actual.
+     */
+    private void prefillDialogFields(EditText editTextFolderName, Spinner colorSpinner, Folder folder) {
+        editTextFolderName.setText(folder.getName());
+        int colorIndex = ColorManager.getFolderColorIndex(folder.getColor());
+        colorSpinner.setSelection(colorIndex);
+    }
+
+    /**
+     * Maneja el evento de clic positivo en el diálogo de carpeta.
+     *
+     * @param folder             Carpeta a editar (nulo si es creación).
+     * @param listener           Listener que recibe la carpeta creada/actualizada.
+     * @param isCreation         Indica si es creación o edición.
+     * @param editTextFolderName Campo de texto para el nombre.
+     * @param colorSpinner       Spinner de colores.
+     */
+    private void handleFolderDialogPositiveClick(Folder folder, FolderDialogListener listener, boolean isCreation, EditText editTextFolderName, Spinner colorSpinner) {
+        String folderName = editTextFolderName.getText().toString().trim();
+        String selectedColor = ColorManager.getFolderColorByIndex(colorSpinner.getSelectedItemPosition());
+
+        if (folderName.isEmpty()) {
+            Notifier.showError(appContext, "El nombre no puede estar vacío");
+            return;
+        }
+
+        if (isCreation) {
+            Folder newFolder = createFolder(folderName, selectedColor);
+            listener.onFolderActionComplete(newFolder);
+        } else if (folder != null) {
+            updateFolder(folder, folderName, selectedColor);
+            listener.onFolderActionComplete(folder);
+        }
     }
 
     /**

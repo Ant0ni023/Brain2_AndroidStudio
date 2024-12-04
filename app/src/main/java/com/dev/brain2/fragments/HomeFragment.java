@@ -1,25 +1,29 @@
 package com.dev.brain2.fragments;
 
 import android.os.Bundle;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
 import com.dev.brain2.R;
 import com.dev.brain2.adapters.FolderAdapter;
 import com.dev.brain2.databinding.FragmentHomeBinding;
 import com.dev.brain2.interfaces.OnFolderClickListener;
 import com.dev.brain2.managers.DialogManager;
-import com.dev.brain2.managers.FolderGridManager;
 import com.dev.brain2.managers.FolderManager;
 import com.dev.brain2.models.Folder;
 import com.dev.brain2.utils.Notifier;
 import com.dev.brain2.utils.SettingsPrefHelper;
 import com.google.gson.Gson;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
+
 import androidx.navigation.Navigation;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -28,51 +32,89 @@ import java.util.List;
  * Fragmento principal que muestra la lista de carpetas.
  */
 public class HomeFragment extends Fragment implements OnFolderClickListener {
+
     private FragmentHomeBinding binding;
     private RecyclerView recyclerView;
     private FolderManager folderManager;
     private DialogManager dialogManager;
-    private FolderGridManager folderGridManager;
     private FolderAdapter folderAdapter;
     private List<Folder> folderList;
     private SettingsPrefHelper settingsPrefHelper;
 
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater,
+                             @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         binding = FragmentHomeBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
 
     @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-        // Inicializar managers
+    public void onViewCreated(@NonNull View view,
+                              @Nullable Bundle savedInstanceState) {
+        initializeManagers();
+        initializeViews();
+        setupRecyclerView();
+        loadFolders();
+    }
+
+    /**
+     * Inicializa los managers necesarios.
+     */
+    private void initializeManagers() {
         folderManager = new FolderManager(requireContext());
         dialogManager = new DialogManager(requireContext(), folderManager, null);
         settingsPrefHelper = new SettingsPrefHelper(requireActivity());
-        // Inicializar vistas
-        recyclerView = binding.foldersRecyclerView;
+    }
 
-        // Configurar UI
-        setupRecyclerView();
-        loadFolders();
+    /**
+     * Inicializa las vistas del fragmento.
+     */
+    private void initializeViews() {
+        recyclerView = binding.foldersRecyclerView;
     }
 
     /**
      * Configura el RecyclerView para mostrar las carpetas.
      */
     private void setupRecyclerView() {
-        folderGridManager = new FolderGridManager(requireContext());
-        recyclerView.setLayoutManager(folderGridManager);
+        int numberOfColumns = calculateNumberOfColumns();
+        GridLayoutManager gridLayoutManager = new GridLayoutManager(requireContext(),
+                numberOfColumns);
+        recyclerView.setLayoutManager(gridLayoutManager);
 
+        folderList = new ArrayList<>();
         folderAdapter = new FolderAdapter(requireContext(), folderList, this);
         recyclerView.setAdapter(folderAdapter);
 
-        int bottomPadding = getResources().getDimensionPixelSize(R.dimen.nav_bar_height);
+        int bottomPadding = getBottomPadding();
         recyclerView.setPadding(0, 0, 0, bottomPadding);
         recyclerView.setClipToPadding(false);
+    }
+
+    /**
+     * Calcula el número de columnas basado en el ancho de la pantalla.
+     *
+     * @return Número de columnas.
+     */
+    private int calculateNumberOfColumns() {
+        int minItemWidthDp = 120;
+        float screenWidthDp = getResources().getDisplayMetrics().widthPixels /
+                getResources().getDisplayMetrics().density;
+        int numberOfColumns = (int) (screenWidthDp / minItemWidthDp);
+        return Math.max(2, numberOfColumns);
+    }
+
+    /**
+     * Obtiene el padding inferior para el RecyclerView.
+     *
+     * @return Padding inferior en píxeles.
+     */
+    private int getBottomPadding() {
+        int bottomPaddingDp = 56; // Altura aproximada de la barra de navegación en dp
+        float density = getResources().getDisplayMetrics().density;
+        return (int) (bottomPaddingDp * density);
     }
 
     /**
@@ -94,11 +136,20 @@ public class HomeFragment extends Fragment implements OnFolderClickListener {
     /**
      * Maneja el clic en una carpeta.
      *
-     * @param folder Carpeta que fue clickeada.
+     * @param clickedFolder Carpeta que fue clickeada.
      */
     @Override
-    public void onFolderClick(Folder folder) {
-        updateRecentFoldersList(folder.getId());
+    public void onFolderClick(Folder clickedFolder) {
+        updateRecentFoldersList(clickedFolder.getId());
+        navigateToFolderContent(clickedFolder);
+    }
+
+    /**
+     * Navega al fragmento de contenido de carpeta.
+     *
+     * @param folder Carpeta seleccionada.
+     */
+    private void navigateToFolderContent(Folder folder) {
         Bundle args = new Bundle();
         args.putString("folderId", folder.getId());
         Navigation.findNavController(requireView())
@@ -111,17 +162,14 @@ public class HomeFragment extends Fragment implements OnFolderClickListener {
      * @param folderId ID de la carpeta abierta.
      */
     private void updateRecentFoldersList(String folderId) {
-        // Obtener la lista actual de carpetas recientes
         String recentFoldersJson = settingsPrefHelper.getString("recentFolders", "[]");
         Gson gson = new Gson();
-        List<String> recentFolderIds = new ArrayList<>(Arrays.asList(gson.fromJson(recentFoldersJson, String[].class)));
+        List<String> recentFolderIds = new ArrayList<>(Arrays.asList(
+                gson.fromJson(recentFoldersJson, String[].class)));
 
-        // Remover el ID si ya existe
         recentFolderIds.remove(folderId);
-        // Agregar el ID al inicio de la lista
         recentFolderIds.add(0, folderId);
 
-        // Guardar la lista actualizada
         String updatedRecentFoldersJson = gson.toJson(recentFolderIds);
         settingsPrefHelper.saveString("recentFolders", updatedRecentFoldersJson);
     }
@@ -129,12 +177,11 @@ public class HomeFragment extends Fragment implements OnFolderClickListener {
     /**
      * Maneja el clic largo en una carpeta.
      *
-     * @param folder   Carpeta que fue presionada.
-     * @param position Posición en la lista.
+     * @param longClickedFolder Carpeta que fue presionada.
      */
     @Override
-    public void onFolderLongClick(Folder folder, int position) {
-        showFolderOptionsDialog(folder);
+    public void onFolderLongClick(Folder longClickedFolder) {
+        showFolderOptionsDialog(longClickedFolder);
     }
 
     /**
@@ -147,19 +194,39 @@ public class HomeFragment extends Fragment implements OnFolderClickListener {
 
         new androidx.appcompat.app.AlertDialog.Builder(requireContext())
                 .setTitle("Opciones de carpeta")
-                .setItems(options, (dialog, which) -> {
-                    if (which == 0) {
-                        dialogManager.showFolderEditDialog(folder, updatedFolder -> loadFolders());
-                    } else if (which == 1) {
-                        Notifier.showDeleteConfirmation(requireContext(), "¿Eliminar esta carpeta?", () -> {
-                            folderManager.deleteFolder(folder);
-                            loadFolders();
-                            Notifier.showInfo(requireContext(), "Carpeta eliminada: " + folder.getName());
-                        });
-                    }
-                })
+                .setItems(options, (dialog, which) ->
+                        handleFolderOptionSelected(which, folder))
                 .setNegativeButton("Cancelar", null)
                 .show();
+    }
+
+    /**
+     * Maneja la opción seleccionada en el diálogo de carpeta.
+     *
+     * @param which  Índice de la opción seleccionada.
+     * @param folder Carpeta sobre la que se realizará la acción.
+     */
+    private void handleFolderOptionSelected(int which, Folder folder) {
+        if (which == 0) {
+            dialogManager.showFolderEditDialog(folder, updatedFolder -> loadFolders());
+        } else if (which == 1) {
+            confirmFolderDeletion(folder);
+        }
+    }
+
+    /**
+     * Muestra una confirmación antes de eliminar una carpeta.
+     *
+     * @param folder Carpeta a eliminar.
+     */
+    private void confirmFolderDeletion(Folder folder) {
+        Notifier.showDeleteConfirmation(requireContext(),
+                "¿Eliminar esta carpeta?", () -> {
+                    folderManager.deleteFolder(folder);
+                    loadFolders();
+                    Notifier.showInfo(requireContext(),
+                            "Carpeta eliminada: " + folder.getName());
+                });
     }
 
     @Override

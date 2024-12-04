@@ -8,15 +8,12 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-
 import androidx.activity.result.ActivityResult;
-import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-
 import com.dev.brain2.databinding.FragmentAddPhotoBinding;
 import com.dev.brain2.managers.DialogManager;
 import com.dev.brain2.managers.FolderManager;
@@ -28,80 +25,55 @@ import com.dev.brain2.utils.Notifier;
 
 /**
  * Fragmento que maneja la funcionalidad de agregar fotos en la aplicación.
- * Permite al usuario tomar fotos con la cámara o seleccionarlas desde la galería,
- * y guardarlas en carpetas específicas.
  */
 public class AddPhotoFragment extends Fragment {
 
-    /** Binding para acceder a los elementos de la vista del fragmento */
     private FragmentAddPhotoBinding binding;
 
-    /** Constantes para permisos y códigos de solicitud */
     private static final String CAMERA_PERMISSION = Manifest.permission.CAMERA;
-    private static final int CAMERA_PERMISSION_REQUEST = 100;
-    private static final int REQUEST_IMAGE_CAPTURE = 1;
-    private static final int REQUEST_PICK_IMAGE = 2;
+    private static final String KEY_SELECTED_IMAGE_URI = "selectedImageUri";
 
-    /** Managers para manejar diferentes aspectos de la aplicación */
     private ImageManager imageManager;
     private FolderManager folderManager;
     private DialogManager dialogManager;
     private PermissionManager permissionManager;
     private ImageFileHandler imageFileHandler;
 
-    /** URI de la imagen seleccionada */
     private Uri selectedImageUri;
 
-    /** Launchers para manejar resultados de actividades */
     private ActivityResultLauncher<Intent> cameraLauncher;
     private ActivityResultLauncher<Intent> galleryLauncher;
     private ActivityResultLauncher<String> permissionLauncher;
 
-    /** Bandera para controlar el retorno de intents */
     private boolean isReturningFromIntent = false;
 
-    /**
-     * Crea y retorna la vista inflada del fragmento.
-     * @param inflater El inflador de layouts
-     * @param container El contenedor padre donde se inflará el fragmento
-     * @param savedInstanceState Estado guardado del fragmento
-     * @return La vista raíz del fragmento
-     */
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
         binding = FragmentAddPhotoBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
 
-    /**
-     * Se llama después de que onCreateView() ha terminado.
-     * Inicializa los managers, configura la UI y los launchers de resultados.
-     * @param view La vista raíz del fragmento
-     * @param savedInstanceState Estado guardado del fragmento
-     */
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-
         initializeManagers();
-        setupUI();
+        setupUIComponents();
         setupActivityResultLaunchers();
 
         if (savedInstanceState != null) {
-            selectedImageUri = savedInstanceState.getParcelable("selectedImageUri");
+            selectedImageUri = savedInstanceState.getParcelable(KEY_SELECTED_IMAGE_URI);
         }
 
         if (!isReturningFromIntent) {
-            startImageSelection();
+            startImageSelectionProcess();
         } else {
             isReturningFromIntent = false;
-            updatePreview();
+            updateImagePreview();
         }
     }
 
     /**
-     * Inicializa todos los managers necesarios para el funcionamiento del fragmento.
-     * Incluye FolderManager, ImageManager, DialogManager, PermissionManager y ImageFileHandler.
+     * Inicializa los managers necesarios para el fragmento.
      */
     private void initializeManagers() {
         Activity activity = requireActivity();
@@ -113,26 +85,27 @@ public class AddPhotoFragment extends Fragment {
     }
 
     /**
-     * Configura los elementos de la interfaz de usuario.
-     * Establece el estado inicial del botón de confirmación y su listener.
+     * Configura los componentes de la interfaz de usuario.
      */
-    private void setupUI() {
+    private void setupUIComponents() {
         binding.confirmButton.setEnabled(false);
-        binding.confirmButton.setOnClickListener(v -> handleConfirmButton());
+        binding.confirmButton.setOnClickListener(v -> handleConfirmButtonClick());
     }
 
     /**
-     * Configura los launchers para manejar resultados de actividades.
-     * Incluye launchers para cámara, galería y permisos.
+     * Configura los ActivityResultLaunchers para manejar los resultados de las actividades.
      */
     private void setupActivityResultLaunchers() {
-        cameraLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
+        cameraLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
                 result -> handleActivityResult(result, true));
 
-        galleryLauncher = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
+        galleryLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
                 result -> handleActivityResult(result, false));
 
-        permissionLauncher = registerForActivityResult(new ActivityResultContracts.RequestPermission(),
+        permissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestPermission(),
                 isGranted -> {
                     if (isGranted) {
                         openCamera();
@@ -143,10 +116,9 @@ public class AddPhotoFragment extends Fragment {
     }
 
     /**
-     * Inicia el proceso de selección de imagen mostrando un diálogo
-     * con opciones para cámara o galería.
+     * Inicia el proceso de selección de imagen.
      */
-    private void startImageSelection() {
+    private void startImageSelectionProcess() {
         dialogManager.showImageSourceDialog(
                 this::openGallery,
                 this::checkCameraPermission
@@ -154,7 +126,7 @@ public class AddPhotoFragment extends Fragment {
     }
 
     /**
-     * Verifica y solicita los permisos necesarios para usar la cámara.
+     * Verifica y solicita el permiso de cámara si es necesario.
      */
     private void checkCameraPermission() {
         permissionLauncher.launch(CAMERA_PERMISSION);
@@ -162,7 +134,6 @@ public class AddPhotoFragment extends Fragment {
 
     /**
      * Abre la cámara para capturar una imagen.
-     * Crea un archivo temporal para almacenar la foto.
      */
     private void openCamera() {
         try {
@@ -176,7 +147,7 @@ public class AddPhotoFragment extends Fragment {
     }
 
     /**
-     * Abre la galería para seleccionar una imagen existente.
+     * Abre la galería para seleccionar una imagen.
      */
     private void openGallery() {
         Intent intent = new Intent(Intent.ACTION_PICK);
@@ -185,18 +156,19 @@ public class AddPhotoFragment extends Fragment {
     }
 
     /**
-     * Maneja el resultado de la captura de imagen o selección desde galería.
-     * @param result Resultado de la actividad
-     * @param fromCamera true si proviene de la cámara, false si es de la galería
+     * Maneja el resultado de la actividad de cámara o galería.
+     *
+     * @param result     Resultado de la actividad.
+     * @param fromCamera Indica si el resultado es de la cámara.
      */
     private void handleActivityResult(ActivityResult result, boolean fromCamera) {
         if (result.getResultCode() == Activity.RESULT_OK) {
             isReturningFromIntent = true;
             if (fromCamera) {
-                updatePreview();
+                updateImagePreview();
             } else if (result.getData() != null) {
                 selectedImageUri = result.getData().getData();
-                updatePreview();
+                updateImagePreview();
             }
         } else {
             Notifier.showError(requireContext(), "No se seleccionó ninguna imagen");
@@ -205,9 +177,8 @@ public class AddPhotoFragment extends Fragment {
 
     /**
      * Actualiza la vista previa de la imagen seleccionada.
-     * Habilita el botón de confirmación si hay una imagen válida.
      */
-    private void updatePreview() {
+    private void updateImagePreview() {
         if (selectedImageUri != null) {
             binding.imageView.setImageURI(selectedImageUri);
             binding.confirmButton.setEnabled(true);
@@ -215,10 +186,9 @@ public class AddPhotoFragment extends Fragment {
     }
 
     /**
-     * Maneja el click en el botón de confirmación.
-     * Muestra diálogos para nombre de imagen y selección de carpeta.
+     * Maneja el clic en el botón de confirmación.
      */
-    private void handleConfirmButton() {
+    private void handleConfirmButtonClick() {
         if (selectedImageUri == null) {
             Notifier.showError(requireContext(), "Seleccione o capture una imagen primero");
             return;
@@ -233,8 +203,9 @@ public class AddPhotoFragment extends Fragment {
 
     /**
      * Guarda la imagen en la carpeta seleccionada.
-     * @param folder Carpeta destino para guardar la imagen
-     * @param imageName Nombre asignado a la imagen
+     *
+     * @param folder    Carpeta donde se guardará la imagen.
+     * @param imageName Nombre de la imagen.
      */
     private void saveImageToFolder(Folder folder, String imageName) {
         try {
@@ -246,27 +217,19 @@ public class AddPhotoFragment extends Fragment {
     }
 
     /**
-     * Maneja el caso cuando se deniegan los permisos de cámara.
-     * Muestra un mensaje de error y reinicia el proceso de selección.
+     * Maneja la denegación del permiso de cámara.
      */
     private void handlePermissionDenied() {
         Notifier.showError(requireContext(), "Permisos necesarios denegados");
-        startImageSelection();
+        startImageSelectionProcess();
     }
 
-    /**
-     * Guarda el estado del fragmento.
-     * @param outState Bundle donde se guarda el estado
-     */
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putParcelable("selectedImageUri", selectedImageUri);
+        outState.putParcelable(KEY_SELECTED_IMAGE_URI, selectedImageUri);
     }
 
-    /**
-     * Limpia las referencias cuando se destruye la vista del fragmento.
-     */
     @Override
     public void onDestroyView() {
         super.onDestroyView();

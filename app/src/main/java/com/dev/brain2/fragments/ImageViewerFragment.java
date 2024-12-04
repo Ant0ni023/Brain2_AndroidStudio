@@ -18,27 +18,24 @@ import com.dev.brain2.utils.Notifier;
  */
 public class ImageViewerFragment extends Fragment {
 
-    // Constante para el argumento de URI de imagen
     public static final String ARG_IMAGE_URI = "imageUri";
 
-    // Binding para el layout del fragmento
     private FragmentImageViewerBinding binding;
 
     public ImageViewerFragment() {
-        // Constructor público vacío requerido
+
     }
 
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        // Inflar el layout usando view binding
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
         binding = FragmentImageViewerBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-        loadImageFromArguments(); // Cargar la imagen pasada vía argumentos
+        loadImageFromArguments();
     }
 
     /**
@@ -46,19 +43,15 @@ public class ImageViewerFragment extends Fragment {
      */
     private void loadImageFromArguments() {
         if (getArguments() != null) {
-            // Obtener el URI de los argumentos
-            String image = getArguments().getString(ARG_IMAGE_URI);
-            Uri imageUri = Uri.parse(image);
-
-            if (imageUri == null) {
-                Notifier.showError(requireContext(), "No se encontró la imagen");
-                Navigation.findNavController(requireView()).navigateUp(); // Navegar hacia atrás si no se encuentra la imagen
+            String imageUriString = getArguments().getString(ARG_IMAGE_URI);
+            if (imageUriString != null) {
+                Uri imageUri = Uri.parse(imageUriString);
+                displayImage(imageUri);
             } else {
-                displayImage(imageUri); // Mostrar la imagen
+                handleImageNotFound();
             }
         } else {
-            Notifier.showError(requireContext(), "No se encontró la imagen");
-            requireActivity().onBackPressed();
+            handleImageNotFound();
         }
     }
 
@@ -70,16 +63,23 @@ public class ImageViewerFragment extends Fragment {
     private void displayImage(Uri imageUri) {
         binding.fullImageView.setImageURI(imageUri);
 
-        // Verificar si la imagen se cargó correctamente
         if (binding.fullImageView.getDrawable() == null) {
             Notifier.showError(requireContext(), "No se pudo cargar la imagen");
-            binding.fullImageView.setImageResource(R.drawable.ic_error); // Mostrar icono de error
+            binding.fullImageView.setImageResource(R.drawable.ic_error);
         }
+    }
+
+    /**
+     * Maneja el caso cuando no se encuentra la imagen.
+     */
+    private void handleImageNotFound() {
+        Notifier.showError(requireContext(), "No se encontró la imagen");
+        Navigation.findNavController(requireView()).navigateUp();
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
-        binding = null; // Evitar memory leaks
+        binding = null;
     }
 }

@@ -12,7 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:buttonTint="@color/black"
-        android:text="Enable last opened folder to always appear as the first one"
+        android:text="Habilitar que la última carpeta abierta aparezca en la primera posición"
         android:textColor="@color/black"
         android:theme="@style/SCBSwitch"/>
 
@@ -26,7 +26,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Color of top and bottom bar:"
+            android:text="Color de la barra superior e inferior:"
             android:layout_gravity="center_vertical"
             android:textColor="@color/black"/>
 
@@ -48,7 +48,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Color of Icons:"
+            android:text="Color de los iconos:"
             android:layout_gravity="center_vertical"
             android:textColor="@color/black"/>
 

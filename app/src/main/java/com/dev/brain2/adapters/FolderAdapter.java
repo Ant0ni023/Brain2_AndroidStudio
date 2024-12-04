@@ -7,11 +7,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.ImageView;
+
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.dev.brain2.R;
 import com.dev.brain2.models.Folder;
 import com.dev.brain2.interfaces.OnFolderClickListener;
+
 import java.util.List;
 
 /**
@@ -19,10 +22,9 @@ import java.util.List;
  */
 public class FolderAdapter extends RecyclerView.Adapter<FolderAdapter.FolderViewHolder> {
 
-    // Variables para mantener los datos y el contexto
-    private List<Folder> folders;          // Lista de carpetas a mostrar
-    private Context context;               // Contexto de la aplicación
-    private OnFolderClickListener listener; // Listener para eventos de clic
+    private List<Folder> folderList;               // Lista de carpetas a mostrar
+    private Context appContext;                    // Contexto de la aplicación
+    private OnFolderClickListener clickListener;   // Listener para eventos de clic
 
     /**
      * Constructor del adaptador.
@@ -31,24 +33,26 @@ public class FolderAdapter extends RecyclerView.Adapter<FolderAdapter.FolderView
      * @param folders  Lista de carpetas a mostrar.
      * @param listener Listener para manejar eventos de clic en las carpetas.
      */
-    public FolderAdapter(Context context, List<Folder> folders, OnFolderClickListener listener) {
-        this.context = context;
-        this.folders = folders;
-        this.listener = listener;
+    public FolderAdapter(Context context, List<Folder> folders,
+                         OnFolderClickListener listener) {
+        this.appContext = context;
+        this.folderList = folders;
+        this.clickListener = listener;
     }
 
     /**
      * Crea nuevas vistas para los elementos de la lista.
      *
      * @param parent   El ViewGroup padre.
-     * @param viewType Tipo de vista (no usado aquí).
+     * @param viewType Tipo de vista.
      * @return Un nuevo FolderViewHolder.
      */
     @NonNull
     @Override
-    public FolderViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        // Inflamos la vista de cada elemento usando el layout item_folder
-        View view = LayoutInflater.from(context).inflate(R.layout.item_folder, parent, false);
+    public FolderViewHolder onCreateViewHolder(@NonNull ViewGroup parent,
+                                               int viewType) {
+        View view = LayoutInflater.from(appContext)
+                .inflate(R.layout.item_folder, parent, false);
         return new FolderViewHolder(view);
     }
 
@@ -60,9 +64,8 @@ public class FolderAdapter extends RecyclerView.Adapter<FolderAdapter.FolderView
      */
     @Override
     public void onBindViewHolder(@NonNull FolderViewHolder holder, int position) {
-        // Obtenemos la carpeta en la posición actual y la vinculamos al ViewHolder
-        Folder folder = folders.get(position);
-        holder.bind(folder);
+        Folder folder = folderList.get(position);
+        holder.bindFolderData(folder);
     }
 
     /**
@@ -72,17 +75,18 @@ public class FolderAdapter extends RecyclerView.Adapter<FolderAdapter.FolderView
      */
     @Override
     public int getItemCount() {
-        return folders.size();
+        return folderList.size();
     }
 
     /**
      * ViewHolder que contiene la vista de cada elemento de la lista.
      */
-    public class FolderViewHolder extends RecyclerView.ViewHolder {
-        // Vistas dentro del elemento
-        private TextView folderName;   // Nombre de la carpeta
-        private TextView imageCount;   // Contador de imágenes
-        private ImageView folderIcon;  // Icono de la carpeta
+    public class FolderViewHolder extends RecyclerView.ViewHolder
+            implements View.OnClickListener, View.OnLongClickListener {
+
+        private TextView textViewFolderName;   // Nombre de la carpeta
+        private TextView textViewImageCount;   // Cantidad de imágenes
+        private ImageView imageViewFolderIcon; // Icono de la carpeta
 
         /**
          * Constructor del ViewHolder.
@@ -91,28 +95,27 @@ public class FolderAdapter extends RecyclerView.Adapter<FolderAdapter.FolderView
          */
         public FolderViewHolder(@NonNull View itemView) {
             super(itemView);
+            initializeViews(itemView);
+            setListeners();
+        }
 
-            // Obtenemos referencias a las vistas
-            folderName = itemView.findViewById(R.id.folderName);
-            imageCount = itemView.findViewById(R.id.imageCount);
-            folderIcon = itemView.findViewById(R.id.folderIcon);
+        /**
+         * Inicializa las vistas del ViewHolder.
+         *
+         * @param itemView La vista del elemento.
+         */
+        private void initializeViews(View itemView) {
+            textViewFolderName = itemView.findViewById(R.id.folderName);
+            textViewImageCount = itemView.findViewById(R.id.imageCount);
+            imageViewFolderIcon = itemView.findViewById(R.id.folderIcon);
+        }
 
-            // Configuramos el listener para clics normales
-            itemView.setOnClickListener(v -> {
-                int position = getAdapterPosition();
-                if (position != RecyclerView.NO_POSITION) {
-                    listener.onFolderClick(folders.get(position));
-                }
-            });
-
-            // Configuramos el listener para clics largos
-            itemView.setOnLongClickListener(v -> {
-                int position = getAdapterPosition();
-                if (position != RecyclerView.NO_POSITION) {
-                    listener.onFolderLongClick(folders.get(position), position);
-                }
-                return true;
-            });
+        /**
+         * Configura los listeners para los eventos de clic.
+         */
+        private void setListeners() {
+            itemView.setOnClickListener(this);
+            itemView.setOnLongClickListener(this);
         }
 
         /**
@@ -120,26 +123,67 @@ public class FolderAdapter extends RecyclerView.Adapter<FolderAdapter.FolderView
          *
          * @param folder La carpeta cuyos datos se mostrarán.
          */
-        public void bind(Folder folder) {
-            // Establecemos el nombre de la carpeta
-            folderName.setText(folder.getName());
+        public void bindFolderData(Folder folder) {
+            displayFolderName(folder.getName());
+            displayImageCount(folder.getImageCount());
+            applyFolderIconColor(folder.getColor());
+        }
 
-            // Mostramos el número de imágenes
-            imageCount.setText(folder.getImageCount() + " imágenes");
+        /**
+         * Muestra el nombre de la carpeta.
+         *
+         * @param folderName Nombre de la carpeta.
+         */
+        private void displayFolderName(String folderName) {
+            textViewFolderName.setText(folderName);
+        }
 
-            // Aplicamos el color al icono de la carpeta
-            int color = Color.parseColor(folder.getColor());
-            folderIcon.setColorFilter(color);
+        /**
+         * Muestra la cantidad de imágenes en la carpeta.
+         *
+         * @param imageCount Cantidad de imágenes.
+         */
+        private void displayImageCount(int imageCount) {
+            String imageCountText = imageCount + " imágenes";
+            textViewImageCount.setText(imageCountText);
+        }
+
+        /**
+         * Aplica el color al icono de la carpeta.
+         *
+         * @param colorHex Código de color en formato hexadecimal.
+         */
+        private void applyFolderIconColor(String colorHex) {
+            int color = Color.parseColor(colorHex);
+            imageViewFolderIcon.setColorFilter(color);
+        }
+
+        @Override
+        public void onClick(View v) {
+            int position = getBindingAdapterPosition();
+            if (position != RecyclerView.NO_POSITION) {
+                clickListener.onFolderClick(folderList.get(position));
+            }
+        }
+
+        @Override
+        public boolean onLongClick(View v) {
+            int position = getBindingAdapterPosition();
+            if (position != RecyclerView.NO_POSITION) {
+                clickListener.onFolderLongClick(folderList.get(position));
+                return true;
+            }
+            return false;
         }
     }
 
     /**
-     * Método para actualizar la lista de carpetas.
+     * Actualiza la lista de carpetas.
      *
      * @param newFolders Nueva lista de carpetas.
      */
     public void updateFolders(List<Folder> newFolders) {
-        this.folders = newFolders;
-        notifyDataSetChanged();  // Notificamos al RecyclerView que los datos han cambiado
+        this.folderList = newFolders;
+        notifyDataSetChanged();
     }
 }

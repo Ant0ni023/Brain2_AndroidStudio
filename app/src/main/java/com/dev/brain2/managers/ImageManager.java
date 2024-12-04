@@ -3,8 +3,10 @@ package com.dev.brain2.managers;
 import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
+
 import com.dev.brain2.models.Folder;
 import com.dev.brain2.models.Image;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -16,9 +18,9 @@ import java.util.List;
  * Esta clase se encarga de gestionar las imágenes de la aplicación.
  */
 public class ImageManager {
-    // Variables necesarias para gestionar las imágenes
-    private Context context;
-    private FolderManager folderManager;
+
+    private final Context appContext;
+    private final FolderManager folderManager;
 
     /**
      * Constructor.
@@ -27,7 +29,7 @@ public class ImageManager {
      * @param folderManager Manager de carpetas.
      */
     public ImageManager(Context context, FolderManager folderManager) {
-        this.context = context;
+        this.appContext = context;
         this.folderManager = folderManager;
     }
 
@@ -40,18 +42,44 @@ public class ImageManager {
      * @throws IOException Si ocurre un error al guardar la imagen.
      */
     public void saveImage(Uri imageUri, String imageName, Folder folder) throws IOException {
-        // Creamos la carpeta si no existe
         File folderDir = folderManager.createFolderOnDisk(folder.getName());
         if (!folderDir.exists()) {
             folderDir.mkdirs();
         }
 
-        // Creamos el archivo de la imagen
-        String fileName = imageName + ".jpg";
-        File imageFile = new File(folderDir, fileName);
+        File imageFile = createImageFile(folderDir, imageName);
+        copyImageToFile(imageUri, imageFile);
 
-        // Copiamos la imagen al archivo
-        try (InputStream inputStream = context.getContentResolver().openInputStream(imageUri);
+        if (imageFile.exists()) {
+            Image image = new Image(Uri.fromFile(imageFile), imageName);
+            folder.addImage(image);
+            folderManager.updateFolder(folder);
+        } else {
+            Log.e("ImageManager", "Error al guardar la imagen.");
+        }
+    }
+
+    /**
+     * Crea un archivo para la imagen.
+     *
+     * @param folderDir Directorio de la carpeta.
+     * @param imageName Nombre de la imagen.
+     * @return Archivo creado.
+     */
+    private File createImageFile(File folderDir, String imageName) {
+        String fileName = imageName + ".jpg";
+        return new File(folderDir, fileName);
+    }
+
+    /**
+     * Copia la imagen desde el URI al archivo destino.
+     *
+     * @param imageUri  URI de la imagen.
+     * @param imageFile Archivo destino.
+     * @throws IOException Si ocurre un error al copiar.
+     */
+    private void copyImageToFile(Uri imageUri, File imageFile) throws IOException {
+        try (InputStream inputStream = appContext.getContentResolver().openInputStream(imageUri);
              FileOutputStream outputStream = new FileOutputStream(imageFile)) {
 
             byte[] buffer = new byte[4096];
@@ -59,18 +87,6 @@ public class ImageManager {
             while ((length = inputStream.read(buffer)) > 0) {
                 outputStream.write(buffer, 0, length);
             }
-        }
-
-        // Verificamos si la imagen se guardó correctamente
-        if (imageFile.exists()) {
-            Log.d("ImageManager", "Imagen guardada exitosamente en: " + imageFile.getAbsolutePath());
-
-            // Creamos un objeto Image y lo añadimos a la carpeta
-            Image image = new Image(Uri.fromFile(imageFile), imageName);
-            folder.addImage(image);
-            folderManager.updateFolder(folder);
-        } else {
-            Log.e("ImageManager", "Error al guardar la imagen.");
         }
     }
 
@@ -83,26 +99,42 @@ public class ImageManager {
      * @return Verdadero si se movió exitosamente, falso de lo contrario.
      */
     public boolean moveImage(Image image, Folder sourceFolder, Folder targetFolder) {
-        // Obtenemos los archivos de origen y destino
         File sourceFile = new File(image.getUri().getPath());
         File targetDir = folderManager.createFolderOnDisk(targetFolder.getName());
         File targetFile = new File(targetDir, sourceFile.getName());
 
-        // Intentamos mover el archivo
-        if (sourceFile.renameTo(targetFile)) {
-            // Si se movió correctamente, actualizamos las carpetas
-            sourceFolder.removeImage(image);
-            image.setUri(Uri.fromFile(targetFile));
-            targetFolder.addImage(image);
-
-            // Actualizamos ambas carpetas
-            folderManager.updateFolder(sourceFolder);
-            folderManager.updateFolder(targetFolder);
-
-            // La carpeta origen se eliminará automáticamente si quedó vacía
+        if (moveFile(sourceFile, targetFile)) {
+            updateFoldersAfterMove(image, sourceFolder, targetFolder, targetFile);
             return true;
         }
         return false;
+    }
+
+    /**
+     * Mueve el archivo de imagen al directorio destino.
+     *
+     * @param sourceFile Archivo origen.
+     * @param targetFile Archivo destino.
+     * @return Verdadero si se movió, falso de lo contrario.
+     */
+    private boolean moveFile(File sourceFile, File targetFile) {
+        return sourceFile.renameTo(targetFile);
+    }
+
+    /**
+     * Actualiza las carpetas después de mover una imagen.
+     *
+     * @param image       Imagen movida.
+     * @param sourceFolder Carpeta origen.
+     * @param targetFolder Carpeta destino.
+     * @param targetFile  Archivo en la nueva ubicación.
+     */
+    private void updateFoldersAfterMove(Image image, Folder sourceFolder, Folder targetFolder, File targetFile) {
+        sourceFolder.removeImage(image);
+        image.setUri(Uri.fromFile(targetFile));
+        targetFolder.addImage(image);
+        folderManager.updateFolder(sourceFolder);
+        folderManager.updateFolder(targetFolder);
     }
 
     /**
@@ -115,13 +147,9 @@ public class ImageManager {
     public boolean deleteImage(Image image, Folder folder) {
         File imageFile = new File(image.getUri().getPath());
 
-        // Intentamos eliminar el archivo
         if (imageFile.exists() && imageFile.delete()) {
-            // Si se eliminó correctamente, actualizamos la carpeta
             folder.removeImage(image);
             folderManager.updateFolder(folder);
-
-            // La carpeta se eliminará automáticamente si quedó vacía
             return true;
         }
         return false;
@@ -136,19 +164,28 @@ public class ImageManager {
      * @return Verdadero si se renombró exitosamente, falso de lo contrario.
      */
     public boolean renameImage(Image image, String newName, Folder folder) {
-        // Obtenemos los archivos viejo y nuevo
         File imageFile = new File(image.getUri().getPath());
         File newImageFile = new File(imageFile.getParent(), newName + ".jpg");
 
-        // Intentamos renombrar el archivo
         if (imageFile.renameTo(newImageFile)) {
-            // Si se renombró correctamente, actualizamos la imagen
-            image.setName(newName);
-            image.setUri(Uri.fromFile(newImageFile));
-            folderManager.updateFolder(folder);
+            updateImageAfterRename(image, newName, newImageFile, folder);
             return true;
         }
         return false;
+    }
+
+    /**
+     * Actualiza la información de la imagen después de renombrarla.
+     *
+     * @param image       Imagen a actualizar.
+     * @param newName     Nuevo nombre.
+     * @param newImageFile Nuevo archivo.
+     * @param folder      Carpeta donde se encuentra la imagen.
+     */
+    private void updateImageAfterRename(Image image, String newName, File newImageFile, Folder folder) {
+        image.setName(newName);
+        image.setUri(Uri.fromFile(newImageFile));
+        folderManager.updateFolder(folder);
     }
 
     /**
@@ -158,13 +195,10 @@ public class ImageManager {
      */
     public List<Image> getAllImages() {
         List<Image> allImages = new ArrayList<>();
-
-        // Supón que folderManager tiene un método para obtener todas las carpetas
         List<Folder> folders = folderManager.getAllFolders();
         for (Folder folder : folders) {
             allImages.addAll(folder.getImages());
         }
-
         return allImages;
     }
 }

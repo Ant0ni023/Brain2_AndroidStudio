@@ -4,12 +4,12 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.CompoundButton;
+
 import com.dev.brain2.MainActivity;
 import com.dev.brain2.databinding.FragmentSettingsBinding;
 import com.dev.brain2.utils.ColorManager;
@@ -19,6 +19,7 @@ import com.dev.brain2.utils.SettingsPrefHelper;
  * Fragmento para las configuraciones de la aplicación.
  */
 public class SettingsFragment extends Fragment {
+
     private FragmentSettingsBinding binding;
     private SettingsPrefHelper settingsPrefHelper;
 
@@ -28,25 +29,36 @@ public class SettingsFragment extends Fragment {
     public static final String KEY_LAST_OPENED = "last_opened";
 
     public SettingsFragment() {
-        // Constructor público vacío requerido
+
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflar el layout para este fragmento
+
         binding = FragmentSettingsBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-        // Inicializar SettingsPrefHelper
-        settingsPrefHelper = new SettingsPrefHelper(requireContext());
+        initializeSettingsPrefHelper();
+        setupSpinners();
+        loadPreferences();
+        setupListeners();
+    }
 
-        // Configurar los adaptadores para los spinners
-        // Adaptador para el spinner de colores de la barra
+    /**
+     * Inicializa el SettingsPrefHelper.
+     */
+    private void initializeSettingsPrefHelper() {
+        settingsPrefHelper = new SettingsPrefHelper(requireContext());
+    }
+
+    /**
+     * Configura los adaptadores para los spinners.
+     */
+    private void setupSpinners() {
         ArrayAdapter<String> barColorAdapter = new ArrayAdapter<>(
                 requireActivity(),
                 android.R.layout.simple_spinner_item,
@@ -55,7 +67,6 @@ public class SettingsFragment extends Fragment {
         barColorAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         binding.spinnerBarColors.setAdapter(barColorAdapter);
 
-        // Adaptador para el spinner de colores de los iconos
         ArrayAdapter<String> iconColorAdapter = new ArrayAdapter<>(
                 requireActivity(),
                 android.R.layout.simple_spinner_item,
@@ -63,51 +74,6 @@ public class SettingsFragment extends Fragment {
         );
         iconColorAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         binding.spinnerIconColors.setAdapter(iconColorAdapter);
-
-        // Cargar las preferencias guardadas
-        loadPreferences();
-
-        // Configurar el listener para el spinner de colores de la barra
-        binding.spinnerBarColors.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {
-                settingsPrefHelper.saveInt(KEY_BAR_COLOR, position);
-                MainActivity mainActivity = (MainActivity) getActivity();
-                if (mainActivity != null) {
-                    mainActivity.changeSystemBarsColor(ColorManager.getBarColorByIndex(position));
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-                // No se seleccionó nada
-            }
-        });
-
-        // Configurar el listener para el spinner de colores de los iconos
-        binding.spinnerIconColors.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int position, long id) {
-                settingsPrefHelper.saveInt(KEY_ICON_COLOR, position);
-                MainActivity mainActivity = (MainActivity) getActivity();
-                if (mainActivity != null) {
-                    mainActivity.changeBottomNavigationIconColor(ColorManager.getIconColorByIndex(position));
-                }
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-                // No se seleccionó nada
-            }
-        });
-
-        // Configurar el listener para el switch de última carpeta abierta
-        binding.switchEnableLastFolder.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                settingsPrefHelper.saveBoolean(KEY_LAST_OPENED, isChecked);
-            }
-        });
     }
 
     /**
@@ -119,10 +85,58 @@ public class SettingsFragment extends Fragment {
 
         int barColorPosition = settingsPrefHelper.getInt(KEY_BAR_COLOR, defaultBarColorPosition);
         int iconColorPosition = settingsPrefHelper.getInt(KEY_ICON_COLOR, defaultIconColorPosition);
-        boolean folder = settingsPrefHelper.getBoolean(KEY_LAST_OPENED, false); // Predeterminado a falso
+        boolean lastOpenedFolderEnabled = settingsPrefHelper.getBoolean(KEY_LAST_OPENED, false);
 
         binding.spinnerBarColors.setSelection(barColorPosition);
         binding.spinnerIconColors.setSelection(iconColorPosition);
-        binding.switchEnableLastFolder.setChecked(folder);
+        binding.switchEnableLastFolder.setChecked(lastOpenedFolderEnabled);
+    }
+
+    /**
+     * Configura los listeners para los elementos de la interfaz.
+     */
+    private void setupListeners() {
+        binding.spinnerBarColors.setOnItemSelectedListener(new BarColorItemSelectedListener());
+        binding.spinnerIconColors.setOnItemSelectedListener(new IconColorItemSelectedListener());
+        binding.switchEnableLastFolder.setOnCheckedChangeListener((buttonView, isChecked) ->
+                settingsPrefHelper.saveBoolean(KEY_LAST_OPENED, isChecked));
+    }
+
+    /**
+     * Listener para el spinner de colores de la barra.
+     */
+    private class BarColorItemSelectedListener implements android.widget.AdapterView.OnItemSelectedListener {
+        @Override
+        public void onItemSelected(android.widget.AdapterView<?> adapterView, View view, int position, long id) {
+            settingsPrefHelper.saveInt(KEY_BAR_COLOR, position);
+            MainActivity mainActivity = (MainActivity) getActivity();
+            if (mainActivity != null) {
+                mainActivity.changeSystemBarsColor(ColorManager.getBarColorByIndex(position));
+            }
+        }
+
+        @Override
+        public void onNothingSelected(android.widget.AdapterView<?> adapterView) {
+
+        }
+    }
+
+    /**
+     * Listener para el spinner de colores de los iconos.
+     */
+    private class IconColorItemSelectedListener implements android.widget.AdapterView.OnItemSelectedListener {
+        @Override
+        public void onItemSelected(android.widget.AdapterView<?> adapterView, View view, int position, long id) {
+            settingsPrefHelper.saveInt(KEY_ICON_COLOR, position);
+            MainActivity mainActivity = (MainActivity) getActivity();
+            if (mainActivity != null) {
+                mainActivity.changeBottomNavigationIconColor(ColorManager.getIconColorByIndex(position));
+            }
+        }
+
+        @Override
+        public void onNothingSelected(android.widget.AdapterView<?> adapterView) {
+
+        }
     }
 }

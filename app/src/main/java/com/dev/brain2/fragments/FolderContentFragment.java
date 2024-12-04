@@ -1,6 +1,5 @@
 package com.dev.brain2.fragments;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -27,6 +26,7 @@ import java.util.List;
  * Fragmento que muestra el contenido de una carpeta.
  */
 public class FolderContentFragment extends Fragment implements OnImageClickListener {
+
     private FragmentFolderContentBinding binding;
 
     private static final String ARG_FOLDER_ID = "folderId";
@@ -40,7 +40,7 @@ public class FolderContentFragment extends Fragment implements OnImageClickListe
     private ImageAdapter imageAdapter;
 
     public FolderContentFragment() {
-        // Constructor público vacío requerido
+
     }
 
     /**
@@ -60,26 +60,29 @@ public class FolderContentFragment extends Fragment implements OnImageClickListe
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Inicializar managers
+        initializeManagers();
+    }
+
+    /**
+     * Inicializa los managers necesarios.
+     */
+    private void initializeManagers() {
         folderManager = new FolderManager(requireContext());
         imageManager = new ImageManager(requireContext(), folderManager);
         dialogManager = new DialogManager(requireContext(), folderManager, imageManager);
     }
 
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
         binding = FragmentFolderContentBinding.inflate(inflater, container, false);
         return binding.getRoot();
     }
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-        // Cargar datos de la carpeta desde los argumentos
         loadFolderFromArguments();
-        // Configurar RecyclerView
         setupRecyclerView();
-        // Mostrar contenido de la carpeta
         displayFolderContent();
     }
 
@@ -158,6 +161,15 @@ public class FolderContentFragment extends Fragment implements OnImageClickListe
      */
     @Override
     public void onImageClick(Image image) {
+        navigateToImageViewer(image);
+    }
+
+    /**
+     * Navega al fragmento de visualización de imagen.
+     *
+     * @param image Imagen seleccionada.
+     */
+    private void navigateToImageViewer(Image image) {
         Bundle args = new Bundle();
         args.putString("imageUri", image.getUri().toString());
         Navigation.findNavController(requireView())
@@ -167,11 +179,10 @@ public class FolderContentFragment extends Fragment implements OnImageClickListe
     /**
      * Maneja el clic largo en una imagen.
      *
-     * @param image    Imagen que fue presionada.
-     * @param position Posición en la lista.
+     * @param image Imagen que fue presionada.
      */
     @Override
-    public void onImageLongClick(Image image, int position) {
+    public void onImageLongClick(Image image) {
         showImageOptionsDialog(image);
     }
 
@@ -185,29 +196,53 @@ public class FolderContentFragment extends Fragment implements OnImageClickListe
 
         new androidx.appcompat.app.AlertDialog.Builder(requireContext())
                 .setTitle("Opciones de imagen")
-                .setItems(options, (dialog, which) -> {
-                    switch (which) {
-                        case 0:
-                            dialogManager.showImageMoveDialog(currentFolder, image, this::refreshContent);
-                            break;
-                        case 1:
-                            Notifier.showDeleteConfirmation(requireContext(),
-                                    "¿Está seguro de eliminar esta imagen?",
-                                    () -> {
-                                        if (imageManager.deleteImage(image, currentFolder)) {
-                                            showToast("Imagen eliminada");
-                                            refreshContent();
-                                        } else {
-                                            showToast("Error al eliminar la imagen");
-                                        }
-                                    });
-                            break;
-                        case 2:
-                            dialogManager.showImageRenameDialog(currentFolder, image, this::refreshContent);
-                            break;
-                    }
-                })
+                .setItems(options, (dialog, which) -> handleImageOptionSelected(which, image))
                 .show();
+    }
+
+    /**
+     * Maneja la opción seleccionada en el diálogo de imagen.
+     *
+     * @param which Índice de la opción seleccionada.
+     * @param image Imagen sobre la que se realizará la acción.
+     */
+    private void handleImageOptionSelected(int which, Image image) {
+        switch (which) {
+            case 0:
+                dialogManager.showImageMoveDialog(currentFolder, image, this::refreshContent);
+                break;
+            case 1:
+                confirmImageDeletion(image);
+                break;
+            case 2:
+                dialogManager.showImageRenameDialog(currentFolder, image, this::refreshContent);
+                break;
+        }
+    }
+
+    /**
+     * Muestra una confirmación antes de eliminar una imagen.
+     *
+     * @param image Imagen a eliminar.
+     */
+    private void confirmImageDeletion(Image image) {
+        Notifier.showDeleteConfirmation(requireContext(),
+                "¿Está seguro de eliminar esta imagen?",
+                () -> deleteImage(image));
+    }
+
+    /**
+     * Elimina la imagen y actualiza el contenido.
+     *
+     * @param image Imagen a eliminar.
+     */
+    private void deleteImage(Image image) {
+        if (imageManager.deleteImage(image, currentFolder)) {
+            showToast("Imagen eliminada");
+            refreshContent();
+        } else {
+            showToast("Error al eliminar la imagen");
+        }
     }
 
     /**

@@ -7,11 +7,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.dev.brain2.R;
 import com.dev.brain2.models.Image;
 import com.dev.brain2.interfaces.OnImageClickListener;
+
 import java.util.List;
 
 /**
@@ -19,10 +21,9 @@ import java.util.List;
  */
 public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHolder> {
 
-    // Variables para mantener los datos y el contexto
-    private List<Image> images;           // Lista de imágenes a mostrar
-    private Context context;              // Contexto de la aplicación
-    private OnImageClickListener listener; // Listener para eventos de clic
+    private List<Image> imageList;              // Lista de imágenes a mostrar
+    private Context appContext;                 // Contexto de la aplicación
+    private OnImageClickListener clickListener; // Listener para eventos de clic
 
     /**
      * Constructor del adaptador.
@@ -32,23 +33,22 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
      * @param listener Listener para manejar eventos de clic en las imágenes.
      */
     public ImageAdapter(Context context, List<Image> images, OnImageClickListener listener) {
-        this.context = context;
-        this.images = images;
-        this.listener = listener;
+        this.appContext = context;
+        this.imageList = images;
+        this.clickListener = listener;
     }
 
     /**
      * Crea nuevas vistas para los elementos de la lista.
      *
      * @param parent   El ViewGroup padre.
-     * @param viewType Tipo de vista (no usado aquí).
+     * @param viewType Tipo de vista.
      * @return Un nuevo ImageViewHolder.
      */
     @NonNull
     @Override
     public ImageViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        // Inflamos la vista de cada elemento usando el layout item_image
-        View view = LayoutInflater.from(context).inflate(R.layout.item_image, parent, false);
+        View view = LayoutInflater.from(appContext).inflate(R.layout.item_image, parent, false);
         return new ImageViewHolder(view);
     }
 
@@ -60,9 +60,8 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
      */
     @Override
     public void onBindViewHolder(@NonNull ImageViewHolder holder, int position) {
-        // Obtenemos la imagen en la posición actual y la vinculamos al ViewHolder
-        Image image = images.get(position);
-        holder.bind(image);
+        Image image = imageList.get(position);
+        holder.bindImageData(image);
     }
 
     /**
@@ -72,16 +71,15 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
      */
     @Override
     public int getItemCount() {
-        return images.size();
+        return imageList.size();
     }
 
     /**
      * ViewHolder que contiene la vista de cada elemento de la lista.
      */
-    public class ImageViewHolder extends RecyclerView.ViewHolder {
-        // Vistas dentro del elemento
-        private ImageView imageView;  // Vista para mostrar la imagen
-        private TextView imageName;   // Nombre de la imagen
+    public class ImageViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener {
+        private ImageView imageViewItem;     // Vista para mostrar la imagen
+        private TextView textViewImageName;  // Nombre de la imagen
 
         /**
          * Constructor del ViewHolder.
@@ -90,27 +88,26 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
          */
         public ImageViewHolder(@NonNull View itemView) {
             super(itemView);
+            initializeViews(itemView);
+            setListeners();
+        }
 
-            // Obtenemos referencias a las vistas
-            imageView = itemView.findViewById(R.id.imageView);
-            imageName = itemView.findViewById(R.id.imageName);
+        /**
+         * Inicializa las vistas del ViewHolder.
+         *
+         * @param itemView La vista del elemento.
+         */
+        private void initializeViews(View itemView) {
+            imageViewItem = itemView.findViewById(R.id.imageView);
+            textViewImageName = itemView.findViewById(R.id.imageName);
+        }
 
-            // Configuramos el listener para clics normales
-            itemView.setOnClickListener(v -> {
-                int position = getAdapterPosition();
-                if (position != RecyclerView.NO_POSITION) {
-                    listener.onImageClick(images.get(position));
-                }
-            });
-
-            // Configuramos el listener para clics largos
-            itemView.setOnLongClickListener(v -> {
-                int position = getAdapterPosition();
-                if (position != RecyclerView.NO_POSITION) {
-                    listener.onImageLongClick(images.get(position), position);
-                }
-                return true;
-            });
+        /**
+         * Configura los listeners para los eventos de clic.
+         */
+        private void setListeners() {
+            itemView.setOnClickListener(this);
+            itemView.setOnLongClickListener(this);
         }
 
         /**
@@ -118,23 +115,55 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
          *
          * @param image La imagen cuyos datos se mostrarán.
          */
-        public void bind(Image image) {
-            // Cargamos la imagen en el ImageView
-            Uri imageUri = image.getUri();
-            imageView.setImageURI(imageUri);
+        public void bindImageData(Image image) {
+            displayImage(image.getUri());
+            displayImageName(image.getName());
+        }
 
-            // Establecemos el nombre de la imagen
-            imageName.setText(image.getName());
+        /**
+         * Muestra la imagen en el ImageView.
+         *
+         * @param imageUri URI de la imagen a mostrar.
+         */
+        private void displayImage(Uri imageUri) {
+            imageViewItem.setImageURI(imageUri);
+        }
+
+        /**
+         * Muestra el nombre de la imagen.
+         *
+         * @param imageName Nombre de la imagen.
+         */
+        private void displayImageName(String imageName) {
+            textViewImageName.setText(imageName);
+        }
+
+        @Override
+        public void onClick(View v) {
+            int position = getAdapterPosition();
+            if (position != RecyclerView.NO_POSITION) {
+                clickListener.onImageClick(imageList.get(position));
+            }
+        }
+
+        @Override
+        public boolean onLongClick(View v) {
+            int position = getAdapterPosition();
+            if (position != RecyclerView.NO_POSITION) {
+                clickListener.onImageLongClick(imageList.get(position));
+                return true;
+            }
+            return false;
         }
     }
 
     /**
-     * Método para actualizar la lista de imágenes.
+     * Actualiza la lista de imágenes.
      *
      * @param newImages Nueva lista de imágenes.
      */
     public void updateImages(List<Image> newImages) {
-        this.images = newImages;
-        notifyDataSetChanged();  // Notificamos al RecyclerView que los datos han cambiado
+        this.imageList = newImages;
+        notifyDataSetChanged();
     }
 }

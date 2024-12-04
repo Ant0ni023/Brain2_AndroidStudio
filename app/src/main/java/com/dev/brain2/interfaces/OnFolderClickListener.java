@@ -6,18 +6,18 @@ import com.dev.brain2.models.Folder;
  * Esta interfaz define los métodos para manejar las interacciones del usuario con las carpetas.
  */
 public interface OnFolderClickListener {
+
     /**
      * Se llama cuando el usuario hace clic normal en una carpeta.
      *
-     * @param folder La carpeta que fue clickeada.
+     * @param clickedFolder La carpeta que fue clickeada.
      */
-    void onFolderClick(Folder folder);
+    void onFolderClick(Folder clickedFolder);
 
     /**
      * Se llama cuando el usuario mantiene presionada una carpeta.
      *
-     * @param folder   La carpeta que fue presionada.
-     * @param position La posición de la carpeta en la lista.
+     * @param longClickedFolder La carpeta que fue presionada.
      */
-    void onFolderLongClick(Folder folder, int position);
+    void onFolderLongClick(Folder longClickedFolder);
 }

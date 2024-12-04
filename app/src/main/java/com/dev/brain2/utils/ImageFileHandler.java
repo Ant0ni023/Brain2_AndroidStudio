@@ -3,7 +3,9 @@ package com.dev.brain2.utils;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Environment;
+
 import androidx.core.content.FileProvider;
+
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -14,7 +16,8 @@ import java.util.Locale;
  * Esta clase maneja la creación y gestión de archivos de imagen temporales.
  */
 public class ImageFileHandler {
-    private final Context context;
+
+    private final Context appContext;
 
     /**
      * Constructor.
@@ -22,47 +25,63 @@ public class ImageFileHandler {
      * @param context Contexto de la aplicación.
      */
     public ImageFileHandler(Context context) {
-        this.context = context;
+        this.appContext = context.getApplicationContext();
     }
 
     /**
-     * Crea un archivo temporal para guardar una foto.
+     * Crea un archivo temporal para guardar una foto y retorna su URI.
      *
      * @return URI del archivo temporal creado.
      * @throws IOException Si ocurre un error al crear el archivo.
      */
     public Uri createTemporaryImageFile() throws IOException {
-        // Creamos el archivo temporal
         File photoFile = createImageFile();
-
-        // Convertimos el archivo a URI usando FileProvider
-        return FileProvider.getUriForFile(
-                context,
-                "com.dev.brain2.fileprovider",
-                photoFile
-        );
+        return getUriForFile(photoFile);
     }
 
     /**
-     * Crea un archivo con nombre único basado en la fecha.
+     * Crea un archivo de imagen con un nombre único basado en la fecha.
      *
      * @return Archivo temporal creado.
      * @throws IOException Si ocurre un error al crear el archivo.
      */
     private File createImageFile() throws IOException {
-        // Creamos un nombre único usando la fecha actual
+        String imageFileName = generateUniqueFileName();
+        File storageDir = getStorageDirectory();
+        return File.createTempFile(imageFileName, ".jpg", storageDir);
+    }
+
+    /**
+     * Genera un nombre de archivo único basado en la fecha y hora actuales.
+     *
+     * @return Nombre de archivo único.
+     */
+    private String generateUniqueFileName() {
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
                 .format(new Date());
-        String imageFileName = "JPEG_" + timeStamp + "_";
+        return "JPEG_" + timeStamp + "_";
+    }
 
-        // Obtenemos el directorio de imágenes de la app
-        File storageDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+    /**
+     * Obtiene el directorio de almacenamiento para las imágenes.
+     *
+     * @return Directorio de almacenamiento.
+     */
+    private File getStorageDirectory() {
+        return appContext.getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+    }
 
-        // Creamos el archivo temporal
-        return File.createTempFile(
-                imageFileName,  // prefijo del nombre
-                ".jpg",        // sufijo del nombre
-                storageDir     // directorio
+    /**
+     * Obtiene la URI para un archivo dado usando FileProvider.
+     *
+     * @param file Archivo para el cual se obtendrá la URI.
+     * @return URI del archivo.
+     */
+    private Uri getUriForFile(File file) {
+        return FileProvider.getUriForFile(
+                appContext,
+                "com.dev.brain2.fileprovider",
+                file
         );
     }
 }

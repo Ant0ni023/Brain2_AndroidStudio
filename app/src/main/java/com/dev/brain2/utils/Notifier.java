@@ -2,6 +2,7 @@ package com.dev.brain2.utils;
 
 import android.content.Context;
 import android.widget.Toast;
+
 import androidx.appcompat.app.AlertDialog;
 
 /**
@@ -17,11 +18,7 @@ public class Notifier {
      * @param message Mensaje de error a mostrar.
      */
     public static void showError(Context context, String message) {
-        Toast.makeText(
-                context,                 // Contexto necesario para el Toast
-                "Error: " + message,     // Agregamos el prefijo "Error:" al mensaje
-                Toast.LENGTH_SHORT       // Mostramos el mensaje por un tiempo corto
-        ).show();
+        showToast(context, "Error: " + message);
     }
 
     /**
@@ -31,10 +28,20 @@ public class Notifier {
      * @param message Mensaje informativo a mostrar.
      */
     public static void showInfo(Context context, String message) {
+        showToast(context, message);
+    }
+
+    /**
+     * Muestra un Toast con el mensaje proporcionado.
+     *
+     * @param context Contexto de la aplicación.
+     * @param message Mensaje a mostrar.
+     */
+    private static void showToast(Context context, String message) {
         Toast.makeText(
-                context,                 // Contexto necesario para el Toast
-                message,                 // Mensaje a mostrar
-                Toast.LENGTH_SHORT       // Mostramos el mensaje por un tiempo corto
+                context,
+                message,
+                Toast.LENGTH_SHORT
         ).show();
     }
 
@@ -49,22 +56,32 @@ public class Notifier {
     public static void showDeleteConfirmation(Context context,
                                               String message,
                                               Runnable onConfirm) {
-        // Construimos y configuramos el diálogo
+        showConfirmationDialog(context, "Confirmación", message, "Eliminar", onConfirm);
+    }
+
+    /**
+     * Muestra un diálogo de confirmación genérico.
+     *
+     * @param context      Contexto de la aplicación.
+     * @param title        Título del diálogo.
+     * @param message      Mensaje a mostrar.
+     * @param positiveText Texto del botón positivo.
+     * @param onConfirm    Acción a ejecutar al confirmar.
+     */
+    private static void showConfirmationDialog(Context context,
+                                               String title,
+                                               String message,
+                                               String positiveText,
+                                               Runnable onConfirm)
+    {
         new AlertDialog.Builder(context)
-                .setTitle("Confirmación")              // Título del diálogo
-                .setMessage(message)                   // Mensaje de confirmación
-                .setPositiveButton(                    // Botón de confirmación
-                        "Eliminar",                        // Texto del botón
-                        (dialog, which) -> {
-                            onConfirm.run();              // Ejecutamos la acción de eliminar
-                            showInfo(context,             // Mostramos mensaje de éxito
-                                    "Elemento eliminado");
-                        }
+                .setTitle(title)
+                .setMessage(message)
+                .setPositiveButton(
+                        positiveText,
+                        (dialog, which) -> onConfirm.run()
                 )
-                .setNegativeButton(                   // Botón para cancelar
-                        "Cancelar",                       // Texto del botón
-                        null                              // No hacemos nada al cancelar
-                )
-                .show();                              // Mostramos el diálogo
+                .setNegativeButton("Cancelar", null)
+                .show();
     }
 }
